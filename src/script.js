@@ -3,14 +3,16 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import { laneToPos } from './Helpers/logichelpers.js';
+import { groundAngle } from './Helpers/angleCalculator';
 
 var gui, canvas, scene, camera, controls, renderer;
+var cone1;
 var groundCylinder;
-var speed = 1.2;
+var speed = 0.8;
 var worldSize = 7;
 var fogDensity = 0.5;
 var guisettings = {
-    Fog: true,
+    Fog: false,
     Speed: speed
 };
 
@@ -27,7 +29,7 @@ function init(){
 function createScene(){
     // Debug
     gui = new dat.GUI();
-    gui.add(guisettings, 'Speed', 1, 20).onChange((v) => {
+    gui.add(guisettings, 'Speed', 0.1, 20).onChange((v) => {
         speed = v;
     });
 
@@ -37,7 +39,7 @@ function createScene(){
     // Scene
     scene = new THREE.Scene()
     scene.background = new THREE.Color( 0xc4e6ff );
-    scene.fog = new THREE.FogExp2( 0x096b20, fogDensity );
+    scene.fog = new THREE.FogExp2( 0x096b20, 0 );
 
     gui.add(guisettings, 'Fog').onChange(() => {
         scene.fog.density==fogDensity ? scene.fog.density=0 : scene.fog.density=fogDensity;
@@ -85,7 +87,7 @@ function createScene(){
     scene.add(camera)
 
     // Controls
-    // controls = new OrbitControls(camera, canvas)
+    controls = new OrbitControls(camera, canvas)
     // controls.enableRotate = false;
     // controls.enableDamping = true
     
@@ -111,14 +113,48 @@ function addGround(){
     console.log("Ground created?");
     groundCylinder.rotation.z = Math.PI / 2;
     scene.add( groundCylinder );
-    var cone1 = addTree(1);
+    cone1 = addTree(1);
     var cone2 = addTree(2);
     var cone3 = addTree(3);
     cone2.material.color = new THREE.Color( 0x01fccc );
     cone3.material.color = new THREE.Color( 0x4456ee );
-    console.log("Cone1: ", cone1.position);
-    console.log("Cone2: ", cone2.position);
-    console.log("Cone3: ", cone3.position);
+    // console.log("Cone1: ", cone1.rotation);
+    // console.log("Cone2: ", cone2.position);
+    // console.log("Cone3: ", cone3.position);
+
+    // groundCylinder.rotation.x = Math.PI;
+        setInterval(() => {
+            groundCylinder.rotation.x += Math.PI / 3;
+            addTree(1);
+            //cone4.material.color = new THREE.Color (0xff0000);
+            // console.log("Cone4: ", cone4.rotation);
+        }, 3000)
+   
+
+    // setTimeout(() => {
+    //     groundCylinder.rotation.x += Math.PI / 2;
+    //     var cone5 = addTree(2);
+    //     cone5.material.color = new THREE.Color (0x00ff);
+    //     // console.log("Cone4: ", cone4.rotation);
+        
+    // }, 7000)
+
+    // setTimeout(() => {
+    //     groundCylinder.rotation.x += Math.PI / 2;
+    //     var cone6 = addTree(2);
+    //     cone6.material.color = new THREE.Color (0x00ff);
+    //     // console.log("Cone4: ", cone4.rotation);
+        
+    // }, 10000)
+
+
+    // setTimeout(() => {
+    //     groundCylinder.rotation.x += Math.PI / 2;
+    //     var cone6 = addTree(3);
+    //     cone6.material.color = new THREE.Color (0x00ffff);
+    //     // console.log("Cone4: ", cone4.rotation);
+        
+    // }, 15000)
 }
 
 function addTree(lane){
@@ -126,9 +162,14 @@ function addTree(lane){
     const geometry = new THREE.ConeGeometry( 0.5, 1, 6 );
     const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
     const cone = new THREE.Mesh( geometry, material );
-    cone.rotation.z = Math.PI / 2;
-    cone.position.x = -worldSize;
+    var coords = groundAngle(worldSize, groundCylinder.rotation.x);
+    cone.rotation.x = Math.PI / 2;
+    cone.rotation.z = Math.PI / 2 + groundCylinder.rotation.x;
+
+    cone.position.x = coords.x;
+    cone.position.z = coords.z;
     cone.position.y = posY;
+
     groundCylinder.add( cone );
     return cone;
 }
@@ -169,8 +210,19 @@ function animate(){
          const elapsedTime = clock.getElapsedTime()
  
          // Update objects
-         groundCylinder.rotation.x = .5 * elapsedTime * speed;
-        //  console.log(groundCylinder.rotation.x);
+        //  groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
+        //  console.log(THREE.Math.radToDeg(groundCylinder.rotation.x));
+        // console.log("Cone1: ", cone1.rotation, "T: ", elapsedTime);
+
+        var rot = THREE.Math.radToDeg(groundCylinder.rotation.x);
+
+        // if(rot % 90 < 1){
+        //     addTree(1);
+        // }
+
+        // console.log(rot % 3);
+
+
  
         //  Update Orbital Controls
         if(controls) controls.update()
