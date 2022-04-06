@@ -1,22 +1,17 @@
-/* USED TO CACULATE SPAWN COORDINATES
+/* --------------------------------
+USED TO CACULATE SPAWN COORDINATES
 R = RADIAN OF GROUNDCYLINDER
-ROTX = GROUNDCYLINDER ROTATION X */
+ROTX = GROUNDCYLINDER ROTATION X 
+----------------------------------*/
 
-export function groundAngle(r, rotX){
-    var a = -rotX + Math.PI; //= Math.abs(rotX - Math.PI); //= (rotX) % (Math.PI) + Math.PI;
-    // if(rotX <= Math.PI){
-    //     a = Math.abs(rotX - Math.PI);
-    // }
-    // else{
-    //     a = Math.abs(rotX + Math.PI);
-    // }
+export function spawnPosition(r, rotX){
+    var a = -rotX + Math.PI;
 
     var coords = {x: 0, z: 0};
     if(a>=0 && a<= Math.PI){
         coords.z = r * Math.sin(a);
     }else{
         coords.z = r * Math.sin(a-Math.PI) * -1;
-        // console.log("REIKSME: ", a-Math.PI);
     }
 
     if(a>Math.PI/2 && a<= 2*Math.PI/3){
@@ -24,10 +19,6 @@ export function groundAngle(r, rotX){
     }else{
         coords.x = r * Math.cos(a-Math.PI) * -1;
     }
-    // coords.x = r * Math.cos(a);
-    // coords.z = r * Math.sin(a);
-    console.log("coords: ", coords);
-    console.log("rotX: ", rotX * 180 / Math.PI);
-    console.log("a: ", a * 180 / Math.PI);
+    
     return coords;
 }

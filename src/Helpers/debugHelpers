@@ -1,0 +1,24 @@
+import THREE from "../../../../../AppData/Local/Microsoft/TypeScript/4.6/node_modules/@types/three";
+
+export function createTempObjects(scene){
+    // Objects
+    const geometry = new THREE.TorusGeometry( .7, .2, 16, 100 );
+
+    // Materials
+    const material = new THREE.MeshBasicMaterial()
+    material.color = new THREE.Color(0xff0000)
+
+    // Mesh
+    const sphere = new THREE.Mesh(geometry,material)
+    scene.add(sphere)
+
+    //Ground
+    const groundGeom = new THREE.PlaneGeometry(5, 5, 1, 1);
+    const groundMat = new THREE.MeshBasicMaterial({ color: 0xc4ffcc, side: THREE.DoubleSide });
+
+    const ground = new THREE.Mesh(groundGeom, groundMat);
+    ground.position.y = -0.5;
+    ground.rotation.x = Math.PI / 2;
+    scene.add(ground);
+
+}
