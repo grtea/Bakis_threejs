@@ -6,7 +6,8 @@ import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
 
 var gui, canvas, scene, camera, controls, renderer;
-var cone1;
+var player;
+var playerLanePos = 0;
 var groundCylinder;
 var speed = 0.8;
 var worldSize = 7;
@@ -16,18 +17,38 @@ var guisettings = {
     Speed: speed
 };
 
+//controls
+var rightKey = 39;
+var rightKeyPressed = false;
+var leftKey = 37;
+var leftKeyPressed = false;
+
+document.addEventListener("keydown", keyDownHandler, false);	
+document.addEventListener("keyup", keyUpHandler, false);
+
 
 init();
 
 function init(){
     createScene();
+    // controls = new OrbitControls(camera, canvas);
     addGround();
+    addPlayer(0xff0000);
     animate();
-    setInterval(() => {
-        var randLane = Math.floor(Math.random() * (4 - 1) + 1);
-        console.log(randLane);
-        addTree(randLane);
-    }, 3000)
+
+    var lane = 0;
+    var make = setInterval(() => {
+        // var randLane = Math.floor(Math.random() * (4 - 1) + 1);
+        // console.log(randLane);
+        lane += 1;
+        addTree(lane, 0xffff00);
+        console.log(lane);
+    }, 3000);
+
+    setTimeout(() => {
+        clearInterval(make);
+    }, 9500);
+    
 }
 
 function createScene(){
@@ -85,13 +106,14 @@ function createScene(){
      */
     // Base camera
     camera = new THREE.PerspectiveCamera(100, sizes.width / sizes.height, 0.1, 1000)
+    // camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000)
     camera.position.x = 0
     camera.position.y = 7
-    camera.position.z = 2.5
+    camera.position.z = 2.8
     scene.add(camera)
 
     // Controls
-    // controls = new OrbitControls(camera, canvas)
+    
     // controls.enableRotate = false;
     // controls.enableDamping = true
     
@@ -114,20 +136,14 @@ function addGround(){
     const geometry = new THREE.CylinderGeometry( worldSize, worldSize, 10, 30 );
     const material = new THREE.MeshBasicMaterial( {color: 0x03fc3d} );
     groundCylinder = new THREE.Mesh( geometry, material );
-    console.log("Ground created?");
     groundCylinder.rotation.z = Math.PI / 2;
     scene.add( groundCylinder );
-    // cone1 = addTree(1);
-    // var cone2 = addTree(2);
-    // var cone3 = addTree(3);
-    // cone2.material.color = new THREE.Color( 0x01fccc );
-    // cone3.material.color = new THREE.Color( 0x4456ee );
 }
 
-function addTree(lane){
+function addTree(lane, color){
     const posY = laneToPos(lane);
     const geometry = new THREE.ConeGeometry( 0.5, 1, 6 );
-    const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    const material = new THREE.MeshBasicMaterial( {color: color} );
     const cone = new THREE.Mesh( geometry, material );
     var coords = spawnPosition(worldSize, groundCylinder.rotation.x);
     cone.rotation.x = Math.PI / 2;
@@ -139,6 +155,36 @@ function addTree(lane){
 
     groundCylinder.add( cone );
     return cone;
+}
+
+function addPlayer(color) {
+    const geometry = new THREE.SphereGeometry( 0.09, 32, 16 );
+    const material = new THREE.MeshBasicMaterial( { color: color } );
+    player = new THREE.Mesh( geometry, material );
+    player.position.y = 6.8;
+    // var playerCoords = spawnPosition(worldSize, Math.PI/2);
+    // console.log(playerCoords);
+    player.position.x = playerLanePos;
+    player.position.z = 2.3;
+    scene.add(player);
+}
+
+function keyDownHandler(event){
+    if(event.keyCode == rightKey && player.position.x < 1){
+        player.position.x += 1;
+    }
+    else if(event.keyCode == leftKey && player.position.x > -1){
+        player.position.x -= 1;
+    }
+}
+
+function keyUpHandler(event){
+    if(event.keyCode == rightKey){
+        rightKeyPressed = false;
+    }
+    else if(event.keyCode == leftKey){
+        leftKeyPressed = false;
+    }
 }
 
 function animate(){
@@ -161,7 +207,7 @@ function animate(){
  
         //  Update Orbital Controls
         if(controls) controls.update()
- 
+        
          // Render
          renderer.render(scene, camera)
  
