@@ -7,7 +7,7 @@ import { spawnPosition } from './Helpers/angleCalculator';
 
 var gui, canvas, scene, camera, controls, renderer;
 var player;
-var playerLanePos = 0;
+var playerLane = 2;
 var groundCylinder;
 var speed = 0.8;
 var worldSize = 7;
@@ -105,11 +105,11 @@ function createScene(){
      * Camera
      */
     // Base camera
-    camera = new THREE.PerspectiveCamera(100, sizes.width / sizes.height, 0.1, 1000)
+    camera = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 0.1, 1000)
     // camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000)
     camera.position.x = 0
     camera.position.y = 7
-    camera.position.z = 2.8
+    camera.position.z = 3.8
     scene.add(camera)
 
     // Controls
@@ -162,9 +162,7 @@ function addPlayer(color) {
     const material = new THREE.MeshBasicMaterial( { color: color } );
     player = new THREE.Mesh( geometry, material );
     player.position.y = 6.8;
-    // var playerCoords = spawnPosition(worldSize, Math.PI/2);
-    // console.log(playerCoords);
-    player.position.x = playerLanePos;
+    player.position.x = laneToPos(playerLane);
     player.position.z = 2.3;
     scene.add(player);
 }
@@ -175,15 +173,6 @@ function keyDownHandler(event){
     }
     else if(event.keyCode == leftKey && player.position.x > -1){
         player.position.x -= 1;
-    }
-}
-
-function keyUpHandler(event){
-    if(event.keyCode == rightKey){
-        rightKeyPressed = false;
-    }
-    else if(event.keyCode == leftKey){
-        leftKeyPressed = false;
     }
 }
 
