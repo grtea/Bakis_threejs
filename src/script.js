@@ -4,11 +4,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
+import { Vector3 } from 'three';
 
 var gui, canvas, scene, camera, controls, renderer;
 var player;
 var playerLane = 2;
 var groundCylinder;
+var treePool = [];
+
 var speed = 0.8;
 var worldSize = 7;
 var fogDensity = 0.5;
@@ -19,13 +22,9 @@ var guisettings = {
 
 //controls
 var rightKey = 39;
-var rightKeyPressed = false;
 var leftKey = 37;
-var leftKeyPressed = false;
 
-document.addEventListener("keydown", keyDownHandler, false);	
-document.addEventListener("keyup", keyUpHandler, false);
-
+document.addEventListener("keydown", keyDownHandler, false);
 
 init();
 
@@ -41,14 +40,16 @@ function init(){
         // var randLane = Math.floor(Math.random() * (4 - 1) + 1);
         // console.log(randLane);
         lane += 1;
-        addTree(lane, 0xffff00);
-        console.log(lane);
+        var tree = addTree(lane, 0xffff00);
+        treePool.push(tree);
+        console.log(treePool);
     }, 3000);
 
     setTimeout(() => {
         clearInterval(make);
     }, 9500);
-    
+
+    console.log(player);
 }
 
 function createScene(){
@@ -185,23 +186,30 @@ function animate(){
 
      const tick = () =>
      {
- 
          const elapsedTime = clock.getElapsedTime()
  
-         // Update objects
+        // Update objects
          groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
-        //  console.log(THREE.Math.radToDeg(groundCylinder.rotation.x));
 
-        var rot = THREE.Math.radToDeg(groundCylinder.rotation.x);
- 
         //  Update Orbital Controls
         if(controls) controls.update()
+
+        // Collision detection
+        treePool.forEach(tree => {
+            var treeWorldPos = new Vector3;
+            tree.getWorldPosition(treeWorldPos)
+            if(treeWorldPos.distanceTo(player.position)<=0.5){
+                //TODO: end game here :)
+                player.material.color.setHex( Math.random() * 0xffffff );
+                console.log("oop", treePool.indexOf(tree));
+            }
+        });
         
-         // Render
-         renderer.render(scene, camera)
+        // Render
+        renderer.render(scene, camera)
  
-         // Call tick again on the next frame
-         window.requestAnimationFrame(tick)
+        // Call tick again on the next frame
+        window.requestAnimationFrame(tick)
      }
  
      tick()
