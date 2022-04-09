@@ -11,7 +11,9 @@ var player;
 var playerLane = 2;
 var groundCylinder;
 var treePool = [];
+var collectablePool = [];
 
+var points = 0;
 var speed = 0.8;
 var worldSize = 7;
 var fogDensity = 0.5;
@@ -40,9 +42,15 @@ function init(){
         // var randLane = Math.floor(Math.random() * (4 - 1) + 1);
         // console.log(randLane);
         lane += 1;
-        var tree = addTree(lane, 0xffff00);
-        treePool.push(tree);
-        console.log(treePool);
+
+        // var tree = addTree(0xffff00);
+        // spawnOnGround(tree, lane, worldSize);
+        // treePool.push(tree);
+
+        var collectable = addCollectable();
+        spawnOnGround(collectable, lane, worldSize+0.2);
+        collectablePool.push(collectable);
+
     }, 3000);
 
     setTimeout(() => {
@@ -141,21 +149,19 @@ function addGround(){
     scene.add( groundCylinder );
 }
 
-function addTree(lane, color){
-    const posY = laneToPos(lane);
+function addTree(color){
     const geometry = new THREE.ConeGeometry( 0.5, 1, 6 );
     const material = new THREE.MeshBasicMaterial( {color: color} );
     const cone = new THREE.Mesh( geometry, material );
-    var coords = spawnPosition(worldSize, groundCylinder.rotation.x);
-    cone.rotation.x = Math.PI / 2;
-    cone.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1;
-
-    cone.position.x = coords.x;
-    cone.position.z = coords.z;
-    cone.position.y = posY;
-
-    groundCylinder.add( cone );
     return cone;
+}
+
+function addCollectable(){
+    const geometry = new THREE.TorusGeometry(0.1, 0.05, 7, 13, 6.283185307179586);
+    const material = new THREE.MeshBasicMaterial({color: 0xf59e42});
+    const torus = new THREE.Mesh( geometry, material );
+    // torus.rotation.x = 0.6;
+    return torus;
 }
 
 function addPlayer(color) {
@@ -168,6 +174,31 @@ function addPlayer(color) {
     scene.add(player);
 }
 
+function spawnOnGround(obj, lane, r) {
+    const posY = laneToPos(lane);
+    var coords = spawnPosition(r, groundCylinder.rotation.x);
+    obj.rotation.x = Math.PI / 2;
+    obj.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1;
+
+    obj.position.x += coords.x;
+    obj.position.z += coords.z;
+    obj.position.y = posY;
+
+    groundCylinder.add( obj );
+}
+
+function despawn(objArray){
+    objArray.forEach(obj => {
+        if(obj.isCollided == true){
+            groundCylinder.remove(obj);
+            scene.remove(obj);
+            //  TODO - more stuff to ensure removal was done
+            // like disband all the materials and geometry
+            objArray.splice(objArray.indexOf(obj), 1);
+        }
+    });
+}
+
 function keyDownHandler(event){
     if(event.keyCode == rightKey && player.position.x < 1){
         player.position.x += 1;
@@ -175,6 +206,27 @@ function keyDownHandler(event){
     else if(event.keyCode == leftKey && player.position.x > -1){
         player.position.x -= 1;
     }
+}
+
+function isCollision(objArray, player){
+    let isCollided = false;
+
+    for(let obj of objArray) {
+        if(obj.isCollided == true) break;
+
+        var objWorldPos = new Vector3;
+        obj.getWorldPosition(objWorldPos);
+
+        if(objWorldPos.distanceTo(player.position)<=0.5){
+            obj.isCollided = true;
+            isCollided = true;
+            break;
+        }
+        else{
+            isCollided = false;
+        }
+    }
+    return isCollided; 
 }
 
 function animate(){
@@ -195,15 +247,19 @@ function animate(){
         if(controls) controls.update()
 
         // Collision detection
-        treePool.forEach(tree => {
-            var treeWorldPos = new Vector3;
-            tree.getWorldPosition(treeWorldPos)
-            if(treeWorldPos.distanceTo(player.position)<=0.5){
-                //TODO: end game here :)
-                player.material.color.setHex( Math.random() * 0xffffff );
-                console.log("oop", treePool.indexOf(tree));
-            }
-        });
+        if(isCollision(treePool, player)){
+            player.material.color.setHex( Math.random() * 0xffffff );
+            console.log("Ded");
+            //TODO game over
+        }
+
+        if(isCollision(collectablePool, player)){
+            points += 1;
+            console.log("pointz baybee: ", points);
+            console.log(collectablePool);
+        }
+
+        despawn(collectablePool);
         
         // Render
         renderer.render(scene, camera)
