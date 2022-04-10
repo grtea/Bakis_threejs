@@ -43,13 +43,19 @@ function init(){
         // console.log(randLane);
         lane += 1;
 
-        // var tree = addTree(0xffff00);
-        // spawnOnGround(tree, lane, worldSize);
-        // treePool.push(tree);
+        var tree = addTree(0xffff00);
+        spawnOnGround(tree, lane, worldSize);
+        treePool.push(tree);
 
-        var collectable = addCollectable();
-        spawnOnGround(collectable, lane, worldSize+0.2);
-        collectablePool.push(collectable);
+        // var collectable = addCollectable();
+        // spawnOnGround(collectable, lane++, worldSize+0.2);
+        // collectablePool.push(collectable);
+
+        // var worldPos = new Vector3;
+        // collectable.getWorldPosition(worldPos);
+        // console.log("local: ", collectable.position);
+        // console.log("world: ", worldPos);
+
 
     }, 3000);
 
@@ -153,6 +159,8 @@ function addTree(color){
     const geometry = new THREE.ConeGeometry( 0.5, 1, 6 );
     const material = new THREE.MeshBasicMaterial( {color: color} );
     const cone = new THREE.Mesh( geometry, material );
+    cone.spawnRotation = groundCylinder.rotation.x;
+    cone.justSpawned = true;
     return cone;
 }
 
@@ -160,7 +168,8 @@ function addCollectable(){
     const geometry = new THREE.TorusGeometry(0.1, 0.05, 7, 13, 6.283185307179586);
     const material = new THREE.MeshBasicMaterial({color: 0xf59e42});
     const torus = new THREE.Mesh( geometry, material );
-    // torus.rotation.x = 0.6;
+    torus.spawnRotation = groundCylinder.rotation.x;
+    torus.justSpawned = true;
     return torus;
 }
 
@@ -187,16 +196,37 @@ function spawnOnGround(obj, lane, r) {
     groundCylinder.add( obj );
 }
 
-function despawn(objArray){
-    objArray.forEach(obj => {
-        if(obj.isCollided == true){
-            groundCylinder.remove(obj);
-            scene.remove(obj);
-            //  TODO - more stuff to ensure removal was done
-            // like disband all the materials and geometry
-            objArray.splice(objArray.indexOf(obj), 1);
-        }
-    });
+function despawn(objArray, despawnCase){
+    switch (despawnCase){
+        case "collision":
+            objArray.forEach(obj => {
+                if(obj.isCollided == true){
+                    groundCylinder.remove(obj);
+                    scene.remove(obj);
+                    objArray.splice(objArray.indexOf(obj), 1);
+                }
+            });
+            break;
+        case "periodic":
+            objArray.forEach(obj => {
+                // console.log("spawn + pi: ", (obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360), "Ground: ", groundCylinder.rotation.x);
+                if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
+                    obj.justSpawned = false;
+                    console.log("ripe for plucking");
+                }
+                var roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+                var roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
+                // console.log("current rot: ", roundedCurrentRot);
+                if((roundedSpawnRot < roundedCurrentRot+0.01 && roundedSpawnRot > roundedCurrentRot-0.01) && !obj.justSpawned){
+                // if(obj.spawnRotation == groundCylinder.rotation.x){
+                    groundCylinder.remove(obj);
+                    scene.remove(obj);
+                    objArray.splice(objArray.indexOf(obj), 1);
+                    console.log("sorry babes... u deleted");
+                }
+            });
+            break;
+    } 
 }
 
 function keyDownHandler(event){
@@ -238,10 +268,12 @@ function animate(){
 
      const tick = () =>
      {
-         const elapsedTime = clock.getElapsedTime()
+        const elapsedTime = clock.getElapsedTime()
  
         // Update objects
-         groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
+        groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
+
+        // console.log(groundCylinder.rotation);
 
         //  Update Orbital Controls
         if(controls) controls.update()
@@ -256,10 +288,11 @@ function animate(){
         if(isCollision(collectablePool, player)){
             points += 1;
             console.log("pointz baybee: ", points);
-            console.log(collectablePool);
+            despawn(collectablePool, "collision");
         }
 
-        despawn(collectablePool);
+        despawn(collectablePool, "periodic");
+        despawn(treePool, "periodic");
         
         // Render
         renderer.render(scene, camera)
@@ -270,5 +303,3 @@ function animate(){
  
      tick()
 }
-
-
