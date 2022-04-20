@@ -18,3 +18,13 @@ body
     left: 0;
     outline: none;
 }
+
+.gameOverScreen{
+    display: none;
+    position: absolute; 
+    z-index: 3;
+    left: 0;
+    right: 0;
+    text-align: center;
+    margin-top: 300px;
+}

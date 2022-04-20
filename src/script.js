@@ -1,7 +1,7 @@
-import './style.css'
-import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import * as dat from 'dat.gui'
+import './style.css';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as dat from 'dat.gui';
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
 import { Vector3 } from 'three';
@@ -22,6 +22,9 @@ var guisettings = {
     Speed: speed
 };
 
+var gameOver = false;
+var make;
+
 //controls
 var rightKey = 39;
 var leftKey = 37;
@@ -37,31 +40,34 @@ function init(){
     addPlayer(0xff0000);
     animate();
 
-    var lane = 0;
-    var make = setInterval(() => {
-        // var randLane = Math.floor(Math.random() * (4 - 1) + 1);
-        // console.log(randLane);
-        lane += 1;
+    make = setInterval(() => {
+        var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
+        var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        while (randLane1==randLane2){
+            randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        }
+        // console.log('first: ', randLane1, '; second: ',  randLane2);
 
-        var tree = addTree(0xffff00);
-        spawnOnGround(tree, lane, worldSize);
-        treePool.push(tree);
+        var collectable = addCollectable();
+        spawnOnGround(collectable, randLane1, worldSize+0.2);
+        collectablePool.push(collectable);
 
-        // var collectable = addCollectable();
-        // spawnOnGround(collectable, lane++, worldSize+0.2);
-        // collectablePool.push(collectable);
+        setTimeout(() => {
+            var tree = addTree(0xffff00);
+            spawnOnGround(tree, randLane2, worldSize);
+            treePool.push(tree);
+        }, 700);
 
-        // var worldPos = new Vector3;
-        // collectable.getWorldPosition(worldPos);
-        // console.log("local: ", collectable.position);
-        // console.log("world: ", worldPos);
+        var worldPos = new Vector3;
+        collectable.getWorldPosition(worldPos);
+        console.log("local: ", collectable.position);
+        console.log("world: ", worldPos);
 
+    }, 1000);
 
-    }, 3000);
-
-    setTimeout(() => {
-        clearInterval(make);
-    }, 9500);
+    // setTimeout(() => {
+    //     clearInterval(make);
+    // }, 9500);
 
     console.log(player);
 }
@@ -259,17 +265,25 @@ function isCollision(objArray, player){
     return isCollided; 
 }
 
+function restartScene(){
+    // while (scene.children.length) {
+    //     scene.remove(scene.children[0]);
+    // }
+
+    // init();
+    console.log("RESTARTED");
+};
+
 function animate(){
     /**
      * Animate
      */
 
-     const clock = new THREE.Clock()
+    const clock = new THREE.Clock()
 
-     const tick = () =>
-     {
+    const tick = () => {
         const elapsedTime = clock.getElapsedTime()
- 
+
         // Update objects
         groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
 
@@ -282,11 +296,13 @@ function animate(){
         if(isCollision(treePool, player)){
             player.material.color.setHex( Math.random() * 0xffffff );
             console.log("Ded");
-            //TODO game over
+            gameOver = true;
         }
 
         if(isCollision(collectablePool, player)){
             points += 1;
+            var pointCounter = document.getElementById("pointCount");
+            pointCounter.innerHTML = points;
             console.log("pointz baybee: ", points);
             despawn(collectablePool, "collision");
         }
@@ -295,11 +311,24 @@ function animate(){
         despawn(treePool, "periodic");
         
         // Render
-        renderer.render(scene, camera)
- 
-        // Call tick again on the next frame
-        window.requestAnimationFrame(tick)
-     }
- 
-     tick()
+        renderer.render(scene, camera);
+
+        // console.log('game over: ', gameOver);
+        if (gameOver){
+            var gameOverScreen = document.getElementsByClassName("gameOverScreen")[0];
+            gameOverScreen.style.display = 'block';
+            clearInterval(make);
+            // //DOM setup
+            // var restartButton = document.getElementsByClassName("restartButton")[0];
+            // restartButton.setAttribute('onclick', restartScene());
+            console.log("GAME OVER")
+            return 0;
+        }
+        else{
+            // Call tick again on the next frame
+            window.requestAnimationFrame(tick);
+        }
+    }
+
+    tick()
 }

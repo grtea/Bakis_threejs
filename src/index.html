@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script onload="onloadFunc();" type="text/javascript" src="../src/script.js"></script>
     <title>ThreeJS Starter</title>
 </head>
 <body>
-    <canvas class="webgl"></canvas>
+    <div style="z-index: 3; position: absolute">
+        Points: 
+        <span id="pointCount">0</span>
+    </div>
+    <div class="gameOverScreen">
+        <h1>GAME OVER</h1>
+        <button class="restartButton" onclick="restartScene()">restart</button>
+    </div>
+    <canvas class="webgl">
+    </canvas>
 </body>
 </html>
+
+<script>
+    var onloadFunc = function() {
+        alert("let's go!");
+    }
+</script>
