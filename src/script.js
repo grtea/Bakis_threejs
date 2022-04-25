@@ -5,6 +5,13 @@ import * as dat from 'dat.gui';
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
 import { Vector3 } from 'three';
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/js/fontawesome'
+import '@fortawesome/fontawesome-free/js/solid'
+import '@fortawesome/fontawesome-free/js/regular'
+import '@fortawesome/fontawesome-free/js/brands'
+
 
 var gui, canvas, scene, camera, controls, renderer;
 var player;
@@ -40,36 +47,36 @@ function init(){
     addPlayer(0xff0000);
     animate();
 
-    make = setInterval(() => {
-        var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
-        var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
-        while (randLane1==randLane2){
-            randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
-        }
-        // console.log('first: ', randLane1, '; second: ',  randLane2);
+    // make = setInterval(() => {
+    //     var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
+    //     var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+    //     while (randLane1==randLane2){
+    //         randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+    //     }
+    //     // // console.log('first: ', randLane1, '; second: ',  randLane2);
 
-        var collectable = addCollectable();
-        spawnOnGround(collectable, randLane1, worldSize+0.2);
-        collectablePool.push(collectable);
+    //     var collectable = addCollectable();
+    //     spawnOnGround(collectable, randLane1, worldSize+0.2);
+    //     collectablePool.push(collectable);
 
-        setTimeout(() => {
-            var tree = addTree(0xffff00);
-            spawnOnGround(tree, randLane2, worldSize);
-            treePool.push(tree);
-        }, 700);
+    //     setTimeout(() => {
+    //         var tree = addTree(0xffff00);
+    //         spawnOnGround(tree, randLane2, worldSize);
+    //         treePool.push(tree);
+    //     }, 700);
 
-        var worldPos = new Vector3;
-        collectable.getWorldPosition(worldPos);
-        console.log("local: ", collectable.position);
-        console.log("world: ", worldPos);
+    //     var worldPos = new Vector3;
+    //     collectable.getWorldPosition(worldPos);
+    //     // console.log("local: ", collectable.position);
+    //     // console.log("world: ", worldPos);
 
-    }, 1000);
+    // }, 1000);
 
     // setTimeout(() => {
     //     clearInterval(make);
     // }, 9500);
 
-    console.log(player);
+    // console.log(player);
 }
 
 function createScene(){
@@ -89,7 +96,7 @@ function createScene(){
 
     gui.add(guisettings, 'Fog').onChange(() => {
         scene.fog.density==fogDensity ? scene.fog.density=0 : scene.fog.density=fogDensity;
-        console.log(scene.fog.density);
+        // console.log(scene.fog.density);
     });
 
     // Lights
@@ -215,20 +222,20 @@ function despawn(objArray, despawnCase){
             break;
         case "periodic":
             objArray.forEach(obj => {
-                // console.log("spawn + pi: ", (obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360), "Ground: ", groundCylinder.rotation.x);
+                // // console.log("spawn + pi: ", (obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360), "Ground: ", groundCylinder.rotation.x);
                 if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
                     obj.justSpawned = false;
-                    console.log("ripe for plucking");
+                    // console.log("ripe for plucking");
                 }
                 var roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
                 var roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
-                // console.log("current rot: ", roundedCurrentRot);
+                // // console.log("current rot: ", roundedCurrentRot);
                 if((roundedSpawnRot < roundedCurrentRot+0.01 && roundedSpawnRot > roundedCurrentRot-0.01) && !obj.justSpawned){
                 // if(obj.spawnRotation == groundCylinder.rotation.x){
                     groundCylinder.remove(obj);
                     scene.remove(obj);
                     objArray.splice(objArray.indexOf(obj), 1);
-                    console.log("sorry babes... u deleted");
+                    // console.log("sorry babes... u deleted");
                 }
             });
             break;
@@ -265,15 +272,6 @@ function isCollision(objArray, player){
     return isCollided; 
 }
 
-function restartScene(){
-    // while (scene.children.length) {
-    //     scene.remove(scene.children[0]);
-    // }
-
-    // init();
-    console.log("RESTARTED");
-};
-
 function animate(){
     /**
      * Animate
@@ -287,7 +285,7 @@ function animate(){
         // Update objects
         groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
 
-        // console.log(groundCylinder.rotation);
+        // // console.log(groundCylinder.rotation);
 
         //  Update Orbital Controls
         if(controls) controls.update()
@@ -295,15 +293,17 @@ function animate(){
         // Collision detection
         if(isCollision(treePool, player)){
             player.material.color.setHex( Math.random() * 0xffffff );
-            console.log("Ded");
+            // console.log("Ded");
             gameOver = true;
         }
 
         if(isCollision(collectablePool, player)){
             points += 1;
-            var pointCounter = document.getElementById("pointCount");
-            pointCounter.innerHTML = points;
-            console.log("pointz baybee: ", points);
+            var pointCounter = document.getElementsByClassName("pointCount");
+            for (var element of pointCounter){
+                element.innerHTML = points;
+            }
+            // console.log("pointz baybee: ", points);
             despawn(collectablePool, "collision");
         }
 
@@ -313,15 +313,13 @@ function animate(){
         // Render
         renderer.render(scene, camera);
 
-        // console.log('game over: ', gameOver);
+        // // console.log('game over: ', gameOver);
         if (gameOver){
-            var gameOverScreen = document.getElementsByClassName("gameOverScreen")[0];
-            gameOverScreen.style.display = 'block';
+            var gameOverScreenElement = document.getElementsByClassName("gameOverScreen")[0];
+            gameOverScreenElement.style.display = 'inline';
             clearInterval(make);
             // //DOM setup
-            // var restartButton = document.getElementsByClassName("restartButton")[0];
-            // restartButton.setAttribute('onclick', restartScene());
-            console.log("GAME OVER")
+            // console.log("GAME OVER")
             return 0;
         }
         else{
@@ -332,3 +330,35 @@ function animate(){
 
     tick()
 }
+
+/* FUNCTIONS FOR THE DOM */
+
+function restartScene(){
+    treePool = [];
+    collectablePool = [];
+    gui.destroy();
+    gameOver = false;
+    points = 0;
+    document.getElementsByClassName("gameOverScreen")[0].style.display = 'none';
+
+    init();
+    
+    console.log("RESTARTED");
+};
+window.restartScene = restartScene; //makes function global so index.html can see it !!!!
+
+function openSettings(){
+    var settingsModal = document.getElementsByClassName('settings-modal')[0];
+    settingsModal.style.display = 'inline';
+    var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
+    settingsButton.classList.add("disabled");
+}
+window.openSettings = openSettings;
+
+function closeSettings(){
+    var settingsModal = document.getElementsByClassName('settings-modal')[0];
+    settingsModal.style.display = 'none';
+    var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
+    settingsButton.classList.remove("disabled");
+}
+window.closeSettings = closeSettings;

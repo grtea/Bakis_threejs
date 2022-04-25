@@ -3,25 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script onload="onloadFunc();" type="text/javascript" src="../src/script.js"></script>
     <title>ThreeJS Starter</title>
 </head>
 <body>
-    <div style="z-index: 3; position: absolute">
-        Points: 
-        <span id="pointCount">0</span>
+    <div class="show settings-button">
+        <button 
+            type="button" 
+            class="btn btn-primary m-4"
+            onclick="openSettings()"
+        ><i class="fa-solid fa-gear"></i>
+         Settings</button>
     </div>
-    <div class="gameOverScreen">
-        <h1>GAME OVER</h1>
-        <button class="restartButton" onclick="restartScene()">restart</button>
+
+    <div class="container h-100">
+        <!-- POINTS START-->
+        <div class="row d-flex">
+            <div class="show col text-center">
+                <div class="points-background m-auto">
+                    <h3 class="p-2 py-4 m-4">
+                        Points: 
+                        <span class="pointCount">0</span>
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <!-- POINTS END -->
+        <!-- SETTINGS START -->
+        <div class="row d-flex justify-content-center h-100"> <!-- align-items-center -->
+            <div class="col settings-modal p-5" style="display: none">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <h3>Settings</h3>
+                        </div>
+                        <div class="col d-flex justify-content-end">
+                            <button
+                            type="button"
+                            class="btn btn-primary"
+                            onclick="closeSettings()"
+                            >Close <i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <p>poopy</p>
+                        </div>
+                        <div class="col">
+                            <select name="poop">
+                                <option></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <p>buttface</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <!-- SETTINGS END -->
+        <!-- GAME OVER START -->
+            <div class="col gameOverScreen p-5">
+                <h1 class="py-2">GAME OVER</h1>
+                <p>Final score: <span class="pointCount">0</span></p>
+                <button 
+                    type="button"
+                    class="restartButton btn btn-primary" 
+                    onclick="restartScene()"
+                >Restart</button>
+            </div>
+        <!-- GAME OVER END -->
+        </div>
     </div>
+
     <canvas class="webgl">
     </canvas>
 </body>
 </html>
-
-<script>
-    var onloadFunc = function() {
-        alert("let's go!");
-    }
-</script>
