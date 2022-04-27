@@ -33,7 +33,22 @@ body
     max-width: 400px !important;
     margin: auto;
     border-radius: 30px;
-    margin-top: 20% !important;
+    margin-top: 10% !important;
+}
+
+.startGameScreen{
+    display: inline;
+    position: absolute; 
+    z-index: 3;
+    left: 0;
+    right: 0;
+    text-align: center;
+    /* margin-top: 300px; */
+    background-color: white;
+    max-width: 400px !important;
+    margin: auto;
+    border-radius: 30px;
+    margin-top: 10% !important;
 }
 
 .show{
@@ -48,6 +63,7 @@ body
 
 .settings-button{
     position: absolute;
+    z-index: 5;
 }
 
 .settings-modal{

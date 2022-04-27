@@ -1,10 +1,10 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as dat from 'dat.gui';
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
 import { Vector3 } from 'three';
+import { MathUtils } from 'three';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/js/fontawesome'
@@ -13,21 +13,19 @@ import '@fortawesome/fontawesome-free/js/regular'
 import '@fortawesome/fontawesome-free/js/brands'
 
 
-var gui, canvas, scene, camera, controls, renderer;
+var canvas, scene, camera, controls, renderer;
 var player;
 var playerLane = 2;
 var groundCylinder;
 var treePool = [];
 var collectablePool = [];
+var collisionDistance = 0.4;
+var fov = 50;
 
 var points = 0;
 var speed = 0.8;
 var worldSize = 7;
-var fogDensity = 0.5;
-var guisettings = {
-    Fog: false,
-    Speed: speed
-};
+var fogDensity = 0.2;
 
 var gameOver = false;
 var make;
@@ -35,6 +33,9 @@ var make;
 //controls
 var rightKey = 39;
 var leftKey = 37;
+var playerPositionGoal;
+var playerMovingRight = false;
+var playerMovingLeft = false;
 
 document.addEventListener("keydown", keyDownHandler, false);
 
@@ -80,24 +81,13 @@ function init(){
 }
 
 function createScene(){
-    // Debug
-    gui = new dat.GUI();
-    gui.add(guisettings, 'Speed', 0.1, 20).onChange((v) => {
-        speed = v;
-    });
-
     // Canvas
     canvas = document.querySelector('canvas.webgl');
 
     // Scene
     scene = new THREE.Scene()
     scene.background = new THREE.Color( 0xc4e6ff );
-    scene.fog = new THREE.FogExp2( 0x096b20, 0 );
-
-    gui.add(guisettings, 'Fog').onChange(() => {
-        scene.fog.density==fogDensity ? scene.fog.density=0 : scene.fog.density=fogDensity;
-        // console.log(scene.fog.density);
-    });
+    scene.fog = new THREE.FogExp2( 0x096b20, fogDensity );
 
     // Lights
     const pointLight = new THREE.PointLight(0xffffff, 0.1)
@@ -116,13 +106,29 @@ function createScene(){
 
     window.addEventListener('resize', () =>
     {
+        const fov = 50;
+        const planeAspectRatio = 16 / 9;
+
         // Update sizes
         sizes.width = window.innerWidth
         sizes.height = window.innerHeight
 
         // Update camera
         camera.aspect = sizes.width / sizes.height
+    
+        if (camera.aspect > planeAspectRatio) {
+            // window too narrow
+            camera.fov = fov;
+        } else {
+            // window too large
+            const cameraHeight = Math.tan(MathUtils.degToRad(fov / 2));
+            const ratio = camera.aspect / planeAspectRatio;
+            const newCameraHeight = cameraHeight / ratio;
+            camera.fov = MathUtils.radToDeg(Math.atan(newCameraHeight)) * 2;
+        }
+        
         camera.updateProjectionMatrix()
+        console.log(camera.fov);
 
         // Update renderer
         renderer.setSize(sizes.width, sizes.height)
@@ -133,7 +139,7 @@ function createScene(){
      * Camera
      */
     // Base camera
-    camera = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 0.1, 1000)
+    camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1, 1000)
     // camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000)
     camera.position.x = 0
     camera.position.y = 7
@@ -144,11 +150,6 @@ function createScene(){
     
     // controls.enableRotate = false;
     // controls.enableDamping = true
-    
-
-    //axis helper for dev
-    const axesHelper = new THREE.AxesHelper( 10 );
-    scene.add( axesHelper );
 
     /**
      * Renderer
@@ -243,11 +244,15 @@ function despawn(objArray, despawnCase){
 }
 
 function keyDownHandler(event){
-    if(event.keyCode == rightKey && player.position.x < 1){
-        player.position.x += 1;
-    }
-    else if(event.keyCode == leftKey && player.position.x > -1){
-        player.position.x -= 1;
+    if(!playerMovingLeft && !playerMovingRight){
+        if(event.keyCode == rightKey && player.position.x < 1){
+            playerMovingRight = true;
+            playerPositionGoal = player.position.x + 1;
+        }
+        else if(event.keyCode == leftKey && player.position.x > -1){
+            playerMovingLeft = true;
+            playerPositionGoal = player.position.x - 1;
+        }
     }
 }
 
@@ -260,7 +265,7 @@ function isCollision(objArray, player){
         var objWorldPos = new Vector3;
         obj.getWorldPosition(objWorldPos);
 
-        if(objWorldPos.distanceTo(player.position)<=0.5){
+        if(objWorldPos.distanceTo(player.position)<=collisionDistance){
             obj.isCollided = true;
             isCollided = true;
             break;
@@ -285,6 +290,22 @@ function animate(){
         // Update objects
         groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
 
+        //Player movement animation
+        if(playerMovingRight && playerPositionGoal>player.position.x){
+            player.position.x += 0.1;
+        }
+        if(playerMovingRight && playerPositionGoal<=player.position.x){
+            playerMovingRight = false;
+            player.position.x = playerPositionGoal;
+        }
+        if(playerMovingLeft && playerPositionGoal<player.position.x){
+            player.position.x -= 0.1;
+        }
+        if(playerMovingLeft && playerPositionGoal>=player.position.x){
+            playerMovingLeft = false;
+            player.position.x = playerPositionGoal;
+        }
+
         // // console.log(groundCylinder.rotation);
 
         //  Update Orbital Controls
@@ -292,8 +313,6 @@ function animate(){
 
         // Collision detection
         if(isCollision(treePool, player)){
-            player.material.color.setHex( Math.random() * 0xffffff );
-            // console.log("Ded");
             gameOver = true;
         }
 
@@ -303,9 +322,15 @@ function animate(){
             for (var element of pointCounter){
                 element.innerHTML = points;
             }
-            // console.log("pointz baybee: ", points);
             despawn(collectablePool, "collision");
         }
+
+        //general cleanup jei blogai ispawnintu netycia XD
+        treePool.forEach(tree => {
+            if(isCollision(collectablePool, tree)){
+                despawn(collectablePool, "collision");
+            }
+        })
 
         despawn(collectablePool, "periodic");
         despawn(treePool, "periodic");
@@ -328,6 +353,7 @@ function animate(){
         }
     }
 
+    speed += 0.01;
     tick()
 }
 
@@ -336,12 +362,18 @@ function animate(){
 function restartScene(){
     treePool = [];
     collectablePool = [];
-    gui.destroy();
     gameOver = false;
     points = 0;
+    var pointCounter = document.getElementsByClassName("pointCount");
+    for (var element of pointCounter){
+        element.innerHTML = points;
+    }
     document.getElementsByClassName("gameOverScreen")[0].style.display = 'none';
 
     init();
+
+    var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
+    startGameScreen.style.display = 'inline';
     
     console.log("RESTARTED");
 };
@@ -362,3 +394,71 @@ function closeSettings(){
     settingsButton.classList.remove("disabled");
 }
 window.closeSettings = closeSettings;
+
+function startSpawnEasy(){
+    var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
+    startGameScreen.style.display = 'none';
+
+    speed = 0.4;
+    collisionDistance = 0.2;
+
+    make = setInterval(() => {
+        var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
+        var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        while (randLane1==randLane2){
+            randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        }
+        // // console.log('first: ', randLane1, '; second: ',  randLane2);
+
+        var collectable = addCollectable();
+        spawnOnGround(collectable, randLane1, worldSize+0.2);
+        collectablePool.push(collectable);
+
+        setTimeout(() => {
+            var tree = addTree(0xffff00);
+            spawnOnGround(tree, randLane2, worldSize);
+            treePool.push(tree);
+        }, 700);
+
+        var worldPos = new Vector3;
+        collectable.getWorldPosition(worldPos);
+        // console.log("local: ", collectable.position);
+        // console.log("world: ", worldPos);
+
+    }, 1000);
+}
+window.startSpawnEasy = startSpawnEasy;
+
+function startSpawnHard(){
+    var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
+    startGameScreen.style.display = 'none';
+
+    speed = 0.8;
+    collisionDistance = 0.4;
+
+    make = setInterval(() => {
+        var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
+        var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        while (randLane1==randLane2){
+            randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
+        }
+        // // console.log('first: ', randLane1, '; second: ',  randLane2);
+
+        var collectable = addCollectable();
+        spawnOnGround(collectable, randLane1, worldSize+0.2);
+        collectablePool.push(collectable);
+
+        setTimeout(() => {
+            var tree = addTree(0xffff00);
+            spawnOnGround(tree, randLane2, worldSize);
+            treePool.push(tree);
+        }, 700);
+
+        var worldPos = new Vector3;
+        collectable.getWorldPosition(worldPos);
+        // console.log("local: ", collectable.position);
+        // console.log("world: ", worldPos);
+
+    }, 1000);
+}
+window.startSpawnHard = startSpawnHard;
