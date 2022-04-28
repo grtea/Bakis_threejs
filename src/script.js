@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
+import './Helpers/settings';
 import { Vector3 } from 'three';
 import { MathUtils } from 'three';
 import 'bootstrap';
@@ -11,7 +12,7 @@ import '@fortawesome/fontawesome-free/js/fontawesome'
 import '@fortawesome/fontawesome-free/js/solid'
 import '@fortawesome/fontawesome-free/js/regular'
 import '@fortawesome/fontawesome-free/js/brands'
-
+import { applyUserData, loadUserData, setDefault } from './Helpers/settings';
 
 var canvas, scene, camera, controls, renderer;
 var player;
@@ -31,13 +32,25 @@ var gameOver = false;
 var make;
 
 //controls
-var rightKey = 39;
-var leftKey = 37;
 var playerPositionGoal;
 var playerMovingRight = false;
 var playerMovingLeft = false;
 
 document.addEventListener("keydown", keyDownHandler, false);
+
+window.userData = {};
+
+//Default settings data
+if(!localStorage.getItem('userData')){
+    setDefault();
+}
+
+//Loading userData
+if(localStorage.getItem('userData')){
+    loadUserData();
+}
+
+applyUserData();
 
 init();
 
@@ -47,37 +60,6 @@ function init(){
     addGround();
     addPlayer(0xff0000);
     animate();
-
-    // make = setInterval(() => {
-    //     var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
-    //     var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
-    //     while (randLane1==randLane2){
-    //         randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
-    //     }
-    //     // // console.log('first: ', randLane1, '; second: ',  randLane2);
-
-    //     var collectable = addCollectable();
-    //     spawnOnGround(collectable, randLane1, worldSize+0.2);
-    //     collectablePool.push(collectable);
-
-    //     setTimeout(() => {
-    //         var tree = addTree(0xffff00);
-    //         spawnOnGround(tree, randLane2, worldSize);
-    //         treePool.push(tree);
-    //     }, 700);
-
-    //     var worldPos = new Vector3;
-    //     collectable.getWorldPosition(worldPos);
-    //     // console.log("local: ", collectable.position);
-    //     // console.log("world: ", worldPos);
-
-    // }, 1000);
-
-    // setTimeout(() => {
-    //     clearInterval(make);
-    // }, 9500);
-
-    // console.log(player);
 }
 
 function createScene(){
@@ -127,8 +109,7 @@ function createScene(){
             camera.fov = MathUtils.radToDeg(Math.atan(newCameraHeight)) * 2;
         }
         
-        camera.updateProjectionMatrix()
-        console.log(camera.fov);
+        camera.updateProjectionMatrix();
 
         // Update renderer
         renderer.setSize(sizes.width, sizes.height)
@@ -145,11 +126,6 @@ function createScene(){
     camera.position.y = 7
     camera.position.z = 3.8
     scene.add(camera)
-
-    // Controls
-    
-    // controls.enableRotate = false;
-    // controls.enableDamping = true
 
     /**
      * Renderer
@@ -223,20 +199,16 @@ function despawn(objArray, despawnCase){
             break;
         case "periodic":
             objArray.forEach(obj => {
-                // // console.log("spawn + pi: ", (obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360), "Ground: ", groundCylinder.rotation.x);
                 if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
                     obj.justSpawned = false;
-                    // console.log("ripe for plucking");
                 }
                 var roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
                 var roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
-                // // console.log("current rot: ", roundedCurrentRot);
+
                 if((roundedSpawnRot < roundedCurrentRot+0.01 && roundedSpawnRot > roundedCurrentRot-0.01) && !obj.justSpawned){
-                // if(obj.spawnRotation == groundCylinder.rotation.x){
                     groundCylinder.remove(obj);
                     scene.remove(obj);
                     objArray.splice(objArray.indexOf(obj), 1);
-                    // console.log("sorry babes... u deleted");
                 }
             });
             break;
@@ -245,11 +217,11 @@ function despawn(objArray, despawnCase){
 
 function keyDownHandler(event){
     if(!playerMovingLeft && !playerMovingRight){
-        if(event.keyCode == rightKey && player.position.x < 1){
+        if(event.keyCode == window.userData.rightKey && player.position.x < 1){
             playerMovingRight = true;
             playerPositionGoal = player.position.x + 1;
         }
-        else if(event.keyCode == leftKey && player.position.x > -1){
+        else if(event.keyCode == window.userData.leftKey && player.position.x > -1){
             playerMovingLeft = true;
             playerPositionGoal = player.position.x - 1;
         }
@@ -338,13 +310,10 @@ function animate(){
         // Render
         renderer.render(scene, camera);
 
-        // // console.log('game over: ', gameOver);
         if (gameOver){
             var gameOverScreenElement = document.getElementsByClassName("gameOverScreen")[0];
             gameOverScreenElement.style.display = 'inline';
             clearInterval(make);
-            // //DOM setup
-            // console.log("GAME OVER")
             return 0;
         }
         else{
@@ -379,22 +348,6 @@ function restartScene(){
 };
 window.restartScene = restartScene; //makes function global so index.html can see it !!!!
 
-function openSettings(){
-    var settingsModal = document.getElementsByClassName('settings-modal')[0];
-    settingsModal.style.display = 'inline';
-    var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
-    settingsButton.classList.add("disabled");
-}
-window.openSettings = openSettings;
-
-function closeSettings(){
-    var settingsModal = document.getElementsByClassName('settings-modal')[0];
-    settingsModal.style.display = 'none';
-    var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
-    settingsButton.classList.remove("disabled");
-}
-window.closeSettings = closeSettings;
-
 function startSpawnEasy(){
     var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
     startGameScreen.style.display = 'none';
@@ -408,7 +361,6 @@ function startSpawnEasy(){
         while (randLane1==randLane2){
             randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
         }
-        // // console.log('first: ', randLane1, '; second: ',  randLane2);
 
         var collectable = addCollectable();
         spawnOnGround(collectable, randLane1, worldSize+0.2);
@@ -442,7 +394,6 @@ function startSpawnHard(){
         while (randLane1==randLane2){
             randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
         }
-        // // console.log('first: ', randLane1, '; second: ',  randLane2);
 
         var collectable = addCollectable();
         spawnOnGround(collectable, randLane1, worldSize+0.2);
