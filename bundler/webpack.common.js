@@ -83,6 +83,22 @@ module.exports = {
                         }
                     }
                 ]
+            },
+
+            // Audio
+            {
+                test: /\.(wav|mp3)$/,
+                use:
+                [
+                    {
+                        loader: 'file-loader',
+                        options:
+                        {
+                            outputPath: 'assets/audio/',
+                            name: '[name].[ext]'
+                        }
+                    }
+                ]
             }
         ]
     }

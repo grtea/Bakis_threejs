@@ -6,6 +6,10 @@
     <title>ThreeJS Starter</title>
 </head>
 <body>
+    <!-- <audio loop id="sparkleSound" preload="auto" style="display: none">
+        <source src="sounds/sparkle.wav" type="audio/wav">
+	</audio> -->
+
     <div class="show settings-button">
         <button 
             type="button" 
@@ -31,7 +35,7 @@
         <!-- POINTS END -->
         <!-- SETTINGS START -->
         <div class="row d-flex justify-content-center h-100"> <!-- align-items-center -->
-            <div class="col settings-modal p-5 bg-color" style="display: inline">
+            <div class="col settings-modal p-5 bg-color" style="display: none">
                 <div class="container">
                     <div class="row">
                         <div class="col">
@@ -74,29 +78,33 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="textColorInput" class="col col-form-label">Text Color</label>
-                                    <input 
+                                    <div class="col">
+                                        <input 
                                         type="color" 
-                                        class="form-control color-picker col" 
+                                        class="form-control color-picker mx-auto" 
                                         id="textColorInput" 
                                         aria-describedby="emailHelp" 
                                         value="#212529">
+                                    </div>
                                 </div>
                                 <div class="form-group row">
                                     <label for="UIColorInput" class="col col-form-label">UI background color</label>
-                                    <input 
+                                    <div class="col">
+                                        <input 
                                         type="color" 
-                                        class="form-control color-picker col" 
+                                        class="form-control color-picker mx-auto" 
                                         id="UIColorInput" 
                                         aria-describedby="emailHelp" 
                                         value="#ffffff">
+                                    </div>
                                 </div>
                                 <h4>Controls</h4>
                                 <div class="form-group row">
                                     <div class="col">On-screen buttons</div>
-                                    <div class="col">
+                                    <div class="col mb-2">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="gridCheck1">
-                                            <label class="form-check-label" for="gridCheck1">
+                                            <input class="form-check-input" type="checkbox" id="onScreenBtnCheckbox">
+                                            <label class="form-check-label" for="onScreenBtnCheckbox">
                                             Enable on-screen buttons
                                             </label>
                                         </div>
@@ -135,14 +143,26 @@
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="UIColorInput" class="col-sm-6 col-form-label"></label>
+                                    <!-- <label for="UIColorInput" class="col-sm-9 col-form-label"></label> -->
                                     <div class="col">
                                         <input 
                                         type="button" 
-                                        class="form-control color-picker btn btn-danger" 
+                                        class="form-control btn btn-danger"
                                         id="UIColorInput" 
                                         aria-describedby="emailHelp" 
+                                        onclick="resetOptions()"
                                         value="Reset to default">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col">
+                                        <input 
+                                        type="button" 
+                                        class="form-control btn btn-success" 
+                                        id="UIColorInput" 
+                                        aria-describedby="emailHelp"
+                                        onclick="saveChanges()" 
+                                        value="Save changes">
                                     </div>
                                 </div>
                             </form>
@@ -178,6 +198,12 @@
             >Play hard</button>
         </div>
         <!-- PLAY END -->
+        <!--ON SCREEN CONTROLS START-->
+        <div class="onScreenControls show" style="display: none">
+            <button class="btn btn-primary btn-lg" onclick="keyDownHandler({keyCode: window.userData.leftKey})"><i class="fa-solid fa-arrow-left-long"></i></button>
+            <button class="btn btn-primary btn-lg" onclick="keyDownHandler({keyCode: window.userData.rightKey})"><i class="fa-solid fa-arrow-right-long"></i></button>
+        </div>
+        <!--ON SCREEN CONTROLS END-->
         </div>
     </div>
 
