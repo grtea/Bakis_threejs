@@ -13,6 +13,8 @@ import '@fortawesome/fontawesome-free/js/solid'
 import '@fortawesome/fontawesome-free/js/regular'
 import '@fortawesome/fontawesome-free/js/brands'
 import { applyUserData, loadUserData, setDefault } from './Helpers/settings';
+
+//ASSETS
 import { sparkleAudio } from './sounds/sparkle.wav';
 import { tone1 } from './sounds/htone1.wav';
 import { tone2 } from './sounds/htone2.wav';
@@ -46,6 +48,7 @@ var playerMovingRight = false;
 var playerMovingLeft = false;
 
 document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("mousemove", mouseMoveHandler, false);
 
 window.userData = {};
 
@@ -95,8 +98,7 @@ function createScene(){
         width: window.innerWidth,
         height: window.innerHeight
     }
-
-    const fov = 50;
+    
     const planeAspectRatio = 16 / 9;
 
     window.addEventListener('resize', () =>
@@ -284,6 +286,36 @@ function despawn(objArray, despawnCase){
             break;
     } 
 }
+function mouseMoveHandler(event){
+    // console.log(event);
+    var zoneLength = window.innerWidth / 3
+    var zone1 = zoneLength;
+    var zone2 = zoneLength * 2;
+    if(gamePlaying && !playerMovingLeft && !playerMovingRight){ //&& window.userdata.mouseControls TODO
+        if(event.clientX < zone1 && player.position.x > -1){
+            //Leftmost
+            playerMovingLeft = true;
+            playerPositionGoal = player.position.x - 1;
+        }
+        else if (event.clientX >= zone1 && event.clientX < zone2 && player.position.x != 0){
+            //Mid
+            if(player.position.x < 1){
+                playerMovingRight = true;
+                playerPositionGoal = player.position.x + 1;
+            }
+            else if(player.position.x > -1){
+                playerMovingLeft = true;
+                playerPositionGoal = player.position.x - 1;
+            }
+        }
+        else if (event.clientX >= zone2 && player.position.x < 1){
+            //Rightmost
+            playerMovingRight = true;
+            playerPositionGoal = player.position.x + 1;
+        }
+    }
+    
+}
 
 function keyDownHandler(event){
     if(gamePlaying){
@@ -398,6 +430,7 @@ function animate(){
         //general cleanup jei blogai ispawnintu netycia XD
         treePool.forEach(tree => {
             if(isCollision(collectablePool, tree, true)){
+                console.log("cleanup");
                 despawn(collectablePool, "collision");
             }
         })
@@ -416,9 +449,12 @@ function animate(){
             // Call tick again on the next frame
             window.requestAnimationFrame(tick);
         }
+        if(gamePlaying){
+            speed += 0.00001;
+            collisionDistance = speed/2;
+        }
     }
 
-    speed += 0.01;
     tick()
 }
 
@@ -438,21 +474,23 @@ function gameOver(){
 
 /* FUNCTIONS FOR THE DOM */
 function exitGameplay(){
+    gameIsOver = true;
     gameOver();
     restartScene();
 }
 window.exitGameplay = exitGameplay;
 
 function restartScene(){
-    treePool = [];
-    collectablePool = [];
-    var worldChildren = groundCylinder.children;
-    console.log("before: ", worldChildren);
-    for(var child of worldChildren){
-        groundCylinder.remove(child);
-        scene.remove(child);
+    for(var tree in treePool){
+        scene.remove(tree);
     }
-    console.log("after: ", worldChildren);
+    treePool = [];
+
+    for(var collectable in collectablePool){
+        scene.remove(collectable);
+    }
+    collectablePool = [];
+
     points = 0;
     var pointCounter = document.getElementsByClassName("pointCount");
     for (var element of pointCounter){
@@ -464,13 +502,13 @@ function restartScene(){
     for(var element of showOnStart){
         element.style.display = 'inline';
     }
+    gameIsOver = false;
 
     init();
 };
 window.restartScene = restartScene; //makes function global so index.html can see it !!!!
 
 function startSpawn(){
-    gameIsOver = false;
     gamePlaying = true;
     collisionDistance = speed/2;
     var showOnGameplay = document.getElementsByClassName("showOnGameplay");
@@ -524,7 +562,7 @@ function hideButtons(){
 //SPEED SLIDER
 var speedSlider = document.getElementById('speedSlider');
 speedSlider.addEventListener('change', () => {
-    speed = speedSlider.value;
+    speed = parseFloat(speedSlider.value);
     var text = document.getElementById('difficultyText');
     text.innerHTML = Math.round(10*(speed-0.3));
 });

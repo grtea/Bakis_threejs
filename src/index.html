@@ -31,7 +31,7 @@
     <div class="container h-100">
         <!-- POINTS START-->
         <div class="row d-flex showOnGameplay showOnDeath"> <!-- this showing isnt tested lol-->
-            <div class="show col text-center">
+            <div class="show col text-center pointsDiv">
                 <div class="points-background m-auto bg-color">
                     <h3 class="p-2 py-4 m-4">
                         Points: 
@@ -41,143 +41,143 @@
             </div>
         </div>
         <!-- POINTS END -->
-        <div class="row d-flex justify-content-center"> <!-- align-items-center  h-100-->
+        <div class="row d-flex justify-content-center"> <!-- align-items-center h-100-->
         <!-- SETTINGS START -->
-            <div class="col settings-modal p-5 bg-color hideDuringGameplay" style="display: none">
-                <div class="container">
-                    <div class="row">
-                        <div class="col">
-                            <h3>Settings</h3>
-                        </div>
-                        <div class="col d-flex justify-content-end">
-                            <button
-                            type="button"
-                            class="btn btn-primary"
-                            onclick="closeSettings()"
-                            >Close <i class="fa-solid fa-xmark"></i></button>
-                        </div>
+        <div class="col settings-modal p-5 bg-color hideDuringGameplay" style="display: none">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <h3>Settings</h3>
                     </div>
-                    <div class="row">
-                        <div class="col mt-2">
-                            <form>
-                                <h4>UI options</h4>
-                                <div class="form-group row">
-                                    <label for="exampleInputEmail1" class="col col-form-label">Text Size</label>
-                                    <div class="col-sm-3">
-                                        <input 
-                                        type="button" 
-                                        class="form-control col-sm-3 btn btn-secondary" 
-                                        id="exampleInputEmail1" 
-                                        aria-describedby="emailHelp"
-                                        value="+"
-                                        onclick="increaseTextSize()"
-                                        >
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <input 
-                                        type="button" 
-                                        class="form-control col-sm-3 btn btn-secondary" 
-                                        id="exampleInputEmail1" 
-                                        aria-describedby="emailHelp"
-                                        value="-"
-                                        onclick="decreaseTextSize()"
-                                        >
+                    <div class="col d-flex justify-content-end">
+                        <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="closeSettings()"
+                        >Close <i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col mt-2">
+                        <form>
+                            <h4>UI options</h4>
+                            <div class="form-group row">
+                                <label for="exampleInputEmail1" class="col col-form-label">Text Size</label>
+                                <div class="col-sm-3">
+                                    <input 
+                                    type="button" 
+                                    class="form-control col-sm-3 btn btn-secondary" 
+                                    id="exampleInputEmail1" 
+                                    aria-describedby="emailHelp"
+                                    value="+"
+                                    onclick="increaseTextSize()"
+                                    >
+                                </div>
+                                <div class="col-sm-3">
+                                    <input 
+                                    type="button" 
+                                    class="form-control col-sm-3 btn btn-secondary" 
+                                    id="exampleInputEmail1" 
+                                    aria-describedby="emailHelp"
+                                    value="-"
+                                    onclick="decreaseTextSize()"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="textColorInput" class="col col-form-label">Text Color</label>
+                                <div class="col">
+                                    <input 
+                                    type="color" 
+                                    class="form-control color-picker mx-auto" 
+                                    id="textColorInput" 
+                                    aria-describedby="emailHelp" 
+                                    value="#212529">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="UIColorInput" class="col col-form-label">UI background color</label>
+                                <div class="col">
+                                    <input 
+                                    type="color" 
+                                    class="form-control color-picker mx-auto" 
+                                    id="UIColorInput" 
+                                    aria-describedby="emailHelp" 
+                                    value="#ffffff">
+                                </div>
+                            </div>
+                            <h4>Controls</h4>
+                            <div class="form-group row">
+                                <div class="col">On-screen buttons</div>
+                                <div class="col mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="onScreenBtnCheckbox">
+                                        <label class="form-check-label" for="onScreenBtnCheckbox">
+                                        Enable on-screen buttons
+                                        </label>
                                     </div>
                                 </div>
-                                <div class="form-group row">
-                                    <label for="textColorInput" class="col col-form-label">Text Color</label>
-                                    <div class="col">
-                                        <input 
-                                        type="color" 
-                                        class="form-control color-picker mx-auto" 
-                                        id="textColorInput" 
-                                        aria-describedby="emailHelp" 
-                                        value="#212529">
+                            </div>
+                            <div class="form-group row">
+                                <label for="exampleInputEmail1" class="col col-form-label">Map button right</label>
+                                <div class="input-group mb-3 col">
+                                    <input 
+                                        type="text" 
+                                        class="form-control"
+                                        id="buttonRightInput" 
+                                        placeholder="Button Right" 
+                                        aria-label="Button Right" 
+                                        aria-describedby="basic-addon2"
+                                        disabled>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="buttonRightRecord"><i class="fa-solid fa-pen" style="color: black"></i></button>
                                     </div>
                                 </div>
-                                <div class="form-group row">
-                                    <label for="UIColorInput" class="col col-form-label">UI background color</label>
-                                    <div class="col">
-                                        <input 
-                                        type="color" 
-                                        class="form-control color-picker mx-auto" 
-                                        id="UIColorInput" 
-                                        aria-describedby="emailHelp" 
-                                        value="#ffffff">
+                            </div>
+                            <div class="form-group row">
+                                <label for="exampleInputEmail1" class="col col-form-label">Map button left</label>
+                                <div class="input-group mb-3 col">
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="buttonLeftInput" 
+                                        placeholder="Button Left" 
+                                        aria-label="Button Left" 
+                                        aria-describedby="basic-addon2"
+                                        disabled>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="buttonLeftRecord"><i class="fa-solid fa-pen" style="color: black"></i></i></button>
                                     </div>
                                 </div>
-                                <h4>Controls</h4>
-                                <div class="form-group row">
-                                    <div class="col">On-screen buttons</div>
-                                    <div class="col mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="onScreenBtnCheckbox">
-                                            <label class="form-check-label" for="onScreenBtnCheckbox">
-                                            Enable on-screen buttons
-                                            </label>
-                                        </div>
-                                    </div>
+                            </div>
+                            <div class="form-group row">
+                                <!-- <label for="UIColorInput" class="col-sm-9 col-form-label"></label> -->
+                                <div class="col">
+                                    <button 
+                                    type="button"
+                                    class="form-control btn btn-danger"
+                                    onclick="resetOptions()">
+                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                        Reset to default
+                                    </button>
                                 </div>
-                                <div class="form-group row">
-                                    <label for="exampleInputEmail1" class="col col-form-label">Map button right</label>
-                                    <div class="input-group mb-3 col">
-                                        <input 
-                                            type="text" 
-                                            class="form-control"
-                                            id="buttonRightInput" 
-                                            placeholder="Button Right" 
-                                            aria-label="Button Right" 
-                                            aria-describedby="basic-addon2"
-                                            disabled>
-                                        <div class="input-group-append">
-                                          <button class="btn btn-outline-secondary" type="button" id="buttonRightRecord"><i class="fa-solid fa-pen" style="color: black"></i></button>
-                                        </div>
-                                    </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col">
+                                    <button
+                                    type="button"
+                                    class="form-control btn btn-success"
+                                    onclick="saveChanges()">
+                                        <i class="fa-solid fa-floppy-disk"></i>
+                                        Save changes
+                                    </button>
                                 </div>
-                                <div class="form-group row">
-                                    <label for="exampleInputEmail1" class="col col-form-label">Map button left</label>
-                                    <div class="input-group mb-3 col">
-                                        <input 
-                                            type="text" 
-                                            class="form-control" 
-                                            id="buttonLeftInput" 
-                                            placeholder="Button Left" 
-                                            aria-label="Button Left" 
-                                            aria-describedby="basic-addon2"
-                                            disabled>
-                                        <div class="input-group-append">
-                                          <button class="btn btn-outline-secondary" type="button" id="buttonLeftRecord"><i class="fa-solid fa-pen" style="color: black"></i></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <!-- <label for="UIColorInput" class="col-sm-9 col-form-label"></label> -->
-                                    <div class="col">
-                                        <button 
-                                        type="button"
-                                        class="form-control btn btn-danger"
-                                        onclick="resetOptions()">
-                                            <i class="fa-solid fa-arrows-rotate"></i>
-                                            Reset to default
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col">
-                                        <button
-                                        type="button"
-                                        class="form-control btn btn-success"
-                                        onclick="saveChanges()">
-                                            <i class="fa-solid fa-floppy-disk"></i>
-                                            Save changes
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
         <!-- SETTINGS END -->
         <!-- GAME OVER START -->
             <div class="col gameOverScreen p-5 bg-color hideDuringGameplay showOnDeath">

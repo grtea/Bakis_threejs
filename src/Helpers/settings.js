@@ -1,17 +1,19 @@
 var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
 var settingsModal = document.getElementsByClassName('settings-modal')[0];
-
+var pointsDiv = document.getElementsByClassName('pointsDiv')[0];
 
 //SETTINGS CONTROL
 function openSettings(){
     settingsModal.style.display = 'inline';
     settingsButton.style.display = 'none';
+    // pointsDiv.style.display = 'none';
 }
 window.openSettings = openSettings;
 
 function closeSettings(){
     settingsModal.style.display = 'none';
     settingsButton.style.display = 'inline';
+    // pointsDiv.style.display = 'inline';
     loadUserData();
     applyUserData();
 }
@@ -67,7 +69,7 @@ export function applyUserData(){
 
 //SETTINGS CHANGES
 function increaseTextSize() {
-    var html = document.getElementsByTagName("html")[0];
+    
     var fontSize = html.style.fontSize;
     var newfontSizeString = (parseInt(fontSize) + 10).toString();
     var newFontSize = newfontSizeString + "%";
