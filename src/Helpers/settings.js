@@ -1,6 +1,13 @@
 var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
 var settingsModal = document.getElementsByClassName('settings-modal')[0];
 var pointsDiv = document.getElementsByClassName('pointsDiv')[0];
+var html = document.getElementsByTagName("html")[0];
+var body = document.getElementsByTagName("body")[0];
+var textColorInput = document.getElementById("textColorInput");
+var UIColorInput = document.getElementById("UIColorInput");
+var buttonRightInput = document.getElementById("buttonRightInput");
+var buttonLeftInput = document.getElementById("buttonLeftInput"); 
+var onScreenBtnCheckbox = document.getElementById('onScreenBtnCheckbox');
 
 //SETTINGS CONTROL
 function openSettings(){
@@ -48,28 +55,25 @@ export function loadUserData(){
 }
 
 export function applyUserData(){
-    document.getElementsByTagName("html")[0].style.setProperty("font-size", window.userData.fontSize);
+    html.style.setProperty("font-size", window.userData.fontSize);
     
-    document.getElementsByTagName("body")[0].style.color = window.userData.textColor;
-    document.getElementById("textColorInput").value = window.userData.textColor;
+    body.style.color = window.userData.textColor;
+    textColorInput.value = window.userData.textColor;
 
-    document.getElementById("UIColorInput").value = window.userData.UIColor;
+    UIColorInput.value = window.userData.UIColor;
     var bgColorElements = document.getElementsByClassName('bg-color');
     for(var element of bgColorElements){
         element.style.backgroundColor = window.userData.UIColor;
     }
 
-    var buttonRightInput = document.getElementById("buttonRightInput"); 
     buttonRightInput.value = window.userData.rightKeyName;
-    var buttonLeftInput = document.getElementById("buttonLeftInput");
     buttonLeftInput.value = window.userData.leftKeyName;
 
-    document.getElementById('onScreenBtnCheckbox').checked = window.userData.onScreenButtons;
+    onScreenBtnCheckbox.checked = window.userData.onScreenButtons;
 }
 
 //SETTINGS CHANGES
 function increaseTextSize() {
-    
     var fontSize = html.style.fontSize;
     var newfontSizeString = (parseInt(fontSize) + 10).toString();
     var newFontSize = newfontSizeString + "%";
@@ -80,7 +84,6 @@ function increaseTextSize() {
 window.increaseTextSize = increaseTextSize;
 
 function decreaseTextSize() {
-    var html = document.getElementsByTagName("html")[0];
     var fontSize = html.style.fontSize;
     var newfontSizeString = (parseInt(fontSize) - 10).toString();
     var newFontSize = newfontSizeString + "%";
@@ -91,13 +94,11 @@ function decreaseTextSize() {
 window.decreaseTextSize = decreaseTextSize;
 
 //Color Inputs
-var textColorInput = document.getElementById("textColorInput");
 textColorInput.addEventListener('change', () => {
-    document.getElementsByTagName("body")[0].style.color = textColorInput.value;
+    body.style.color = textColorInput.value;
     window.userData.textColor = textColorInput.value;
 });
 
-var UIColorInput = document.getElementById("UIColorInput");
 UIColorInput.addEventListener('change', () => {
     window.userData.UIColor = UIColorInput.value;
     applyUserData();
@@ -106,8 +107,6 @@ UIColorInput.addEventListener('change', () => {
 //Button mapping
 var buttonRightRecord = document.getElementById("buttonRightRecord");
 buttonRightRecord.addEventListener('click', () => {
-    //TODO: LISTENING FOR INPUT
-    var buttonRightInput = document.getElementById("buttonRightInput");
     buttonRightInput.value = "Recording input..."; 
     buttonRightRecord.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
@@ -120,8 +119,6 @@ buttonRightRecord.addEventListener('click', () => {
 
 var buttonLeftRecord = document.getElementById("buttonLeftRecord");
 buttonLeftRecord.addEventListener('click', () => {
-    //TODO: LISTENING FOR INPUT
-    var buttonLeftInput = document.getElementById("buttonLeftInput");
     buttonLeftInput.value = "Recording input..."; 
     buttonLeftInput.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
@@ -132,7 +129,6 @@ buttonLeftRecord.addEventListener('click', () => {
     }, { once: true });
 })
 
-var onScreenBtnCheckbox = document.getElementById('onScreenBtnCheckbox');
 onScreenBtnCheckbox.addEventListener('click', () => {
     if(onScreenBtnCheckbox.checked){
         window.userData.onScreenButtons = true;
