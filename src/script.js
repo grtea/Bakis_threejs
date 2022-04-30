@@ -36,7 +36,8 @@ var fogDensity = 0.2;
 
 var collectSound, collideSound, stepSound1, stepSound2, stepSound3;
 
-var gameOver = false;
+var gameIsOver = false;
+var gamePlaying = false;
 var make;
 
 //controls
@@ -95,11 +96,11 @@ function createScene(){
         height: window.innerHeight
     }
 
+    const fov = 50;
+    const planeAspectRatio = 16 / 9;
+
     window.addEventListener('resize', () =>
     {
-        const fov = 50;
-        const planeAspectRatio = 16 / 9;
-
         // Update sizes
         sizes.width = window.innerWidth
         sizes.height = window.innerHeight
@@ -128,8 +129,20 @@ function createScene(){
     /**
      * Camera
      */
+
     // Base camera
-    camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1, 1000)
+    if (sizes.width / sizes.height > planeAspectRatio) {
+        // window too narrow
+        camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1, 1000);
+    } else {
+        // window too large
+        const cameraHeight = Math.tan(MathUtils.degToRad(fov / 2));
+        const ratio = (sizes.width / sizes.height) / planeAspectRatio;
+        const newCameraHeight = cameraHeight / ratio;
+        const customfov = MathUtils.radToDeg(Math.atan(newCameraHeight)) * 2;
+        camera = new THREE.PerspectiveCamera(customfov, sizes.width / sizes.height, 0.1, 1000);
+    }
+
     // camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000)
     camera.position.x = 0
     camera.position.y = 7
@@ -273,20 +286,27 @@ function despawn(objArray, despawnCase){
 }
 
 function keyDownHandler(event){
-    if(!playerMovingLeft && !playerMovingRight){
-        if(event.keyCode == window.userData.rightKey && player.position.x < 1){
-            playerMovingRight = true;
-            playerPositionGoal = player.position.x + 1;
+    if(gamePlaying){
+        if(!playerMovingLeft && !playerMovingRight){
+            if(event.keyCode == window.userData.rightKey && player.position.x < 1){
+                playerMovingRight = true;
+                playerPositionGoal = player.position.x + 1;
+            }
+            else if(event.keyCode == window.userData.leftKey && player.position.x > -1){
+                playerMovingLeft = true;
+                playerPositionGoal = player.position.x - 1;
+            }
         }
-        else if(event.keyCode == window.userData.leftKey && player.position.x > -1){
-            playerMovingLeft = true;
-            playerPositionGoal = player.position.x - 1;
+        //escape
+        if(event.keyCode == 27){
+            exitGameplay();
         }
     }
+    
 }
 window.keyDownHandler = keyDownHandler;
 
-function isCollision(objArray, player){
+function isCollision(objArray, player, cleanup = false){
     let isCollided = false;
 
     for(let obj of objArray) {
@@ -297,7 +317,9 @@ function isCollision(objArray, player){
         if(objWorldPos.distanceTo(player.position)<=collisionDistance){
             obj.isCollided = true;
             isCollided = true;
-            obj.children[0].play();
+            if(!cleanup){
+                obj.children[0].play();
+            }
             break;
         }
         else{
@@ -360,7 +382,7 @@ function animate(){
 
         // Collision detection
         if(isCollision(treePool, player)){
-            gameOver = true;
+            gameIsOver = true;
         }
 
         if(isCollision(collectablePool, player)){
@@ -375,7 +397,7 @@ function animate(){
 
         //general cleanup jei blogai ispawnintu netycia XD
         treePool.forEach(tree => {
-            if(isCollision(collectablePool, tree)){
+            if(isCollision(collectablePool, tree, true)){
                 despawn(collectablePool, "collision");
             }
         })
@@ -386,11 +408,8 @@ function animate(){
         // Render
         renderer.render(scene, camera);
 
-        if (gameOver){
-            var gameOverScreenElement = document.getElementsByClassName("gameOverScreen")[0];
-            gameOverScreenElement.style.display = 'inline';
-            hideButtons();
-            clearInterval(make);
+        if (gameIsOver){
+            gameOver();
             return 0;
         }
         else{
@@ -403,12 +422,37 @@ function animate(){
     tick()
 }
 
+function gameOver(){
+    gamePlaying = false;
+    var gameOverElements = document.getElementsByClassName("showOnDeath");
+    for( var element of gameOverElements){
+        element.style.display = 'inline';
+    }
+    var showOnGameplay = document.getElementsByClassName("showOnGameplay");
+    for( var element of showOnGameplay){
+        element.style.display = 'none';
+    }
+    hideButtons();
+    clearInterval(make);
+}
+
 /* FUNCTIONS FOR THE DOM */
+function exitGameplay(){
+    gameOver();
+    restartScene();
+}
+window.exitGameplay = exitGameplay;
 
 function restartScene(){
     treePool = [];
     collectablePool = [];
-    gameOver = false;
+    var worldChildren = groundCylinder.children;
+    console.log("before: ", worldChildren);
+    for(var child of worldChildren){
+        groundCylinder.remove(child);
+        scene.remove(child);
+    }
+    console.log("after: ", worldChildren);
     points = 0;
     var pointCounter = document.getElementsByClassName("pointCount");
     for (var element of pointCounter){
@@ -416,34 +460,27 @@ function restartScene(){
     }
     document.getElementsByClassName("gameOverScreen")[0].style.display = 'none';
 
-    init();
+    var showOnStart = document.getElementsByClassName("showOnStart");
+    for(var element of showOnStart){
+        element.style.display = 'inline';
+    }
 
-    var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
-    startGameScreen.style.display = 'inline';
-    
-    console.log("RESTARTED");
+    init();
 };
 window.restartScene = restartScene; //makes function global so index.html can see it !!!!
 
-function startSpawnEasy(){
-    speed = 0.4;
-    collisionDistance = 0.2;
-
-    startSpawn();
-}
-window.startSpawnEasy = startSpawnEasy;
-
-function startSpawnHard(){
-    speed = 0.8;
-    collisionDistance = 0.4;
-
-    startSpawn();
-}
-window.startSpawnHard = startSpawnHard;
-
 function startSpawn(){
-    var startGameScreen = document.getElementsByClassName("startGameScreen")[0];
-    startGameScreen.style.display = 'none';
+    gameIsOver = false;
+    gamePlaying = true;
+    collisionDistance = speed/2;
+    var showOnGameplay = document.getElementsByClassName("showOnGameplay");
+    for( var element of showOnGameplay){
+        element.style.display = 'inline';
+    }
+    var hideDuringGameplay = document.getElementsByClassName("hideDuringGameplay");
+    for (var element of hideDuringGameplay){
+        element.style.display = 'none';
+    }
     loadButtons();
 
     make = setInterval(() => {
@@ -470,6 +507,7 @@ function startSpawn(){
 
     }, 1000);
 }
+window.startSpawn = startSpawn;
 
 function loadButtons(){
     if(window.userData.onScreenButtons){
@@ -483,10 +521,10 @@ function hideButtons(){
     }
 }
 
-// const audioLoader = new THREE.AudioLoader();
-//         collectSound = new THREE.PositionalAudio(listener);
-//         audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
-//             collectSound.setBuffer( buffer );
-//             collectSound.setRefDistance(1);
-//             collectable.add(collectSound);
-//         });
+//SPEED SLIDER
+var speedSlider = document.getElementById('speedSlider');
+speedSlider.addEventListener('change', () => {
+    speed = speedSlider.value;
+    var text = document.getElementById('difficultyText');
+    text.innerHTML = Math.round(10*(speed-0.3));
+});

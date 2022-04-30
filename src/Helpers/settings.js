@@ -105,9 +105,13 @@ UIColorInput.addEventListener('change', () => {
 var buttonRightRecord = document.getElementById("buttonRightRecord");
 buttonRightRecord.addEventListener('click', () => {
     //TODO: LISTENING FOR INPUT
+    var buttonRightInput = document.getElementById("buttonRightInput");
+    buttonRightInput.value = "Recording input..."; 
+    buttonRightRecord.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
         window.userData.rightKey = event.keyCode;
         window.userData.rightKeyName = event.key;
+        buttonRightRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
         applyUserData();
     }, { once: true });
 })
@@ -115,9 +119,13 @@ buttonRightRecord.addEventListener('click', () => {
 var buttonLeftRecord = document.getElementById("buttonLeftRecord");
 buttonLeftRecord.addEventListener('click', () => {
     //TODO: LISTENING FOR INPUT
+    var buttonLeftInput = document.getElementById("buttonLeftInput");
+    buttonLeftInput.value = "Recording input..."; 
+    buttonLeftInput.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
         window.userData.leftKey = event.keyCode;
         window.userData.leftKeyName = event.key;
+        buttonLeftRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
         applyUserData();
     }, { once: true });
 })
@@ -132,4 +140,3 @@ onScreenBtnCheckbox.addEventListener('click', () => {
     }
     applyUserData();
 })
-

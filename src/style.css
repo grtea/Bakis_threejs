@@ -10,7 +10,7 @@ body
     height: 100vh;
     /* height: 100%; */
     font-family: 'Poppins';
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 /* h1, h2, h3, h4, h5, h6 {
@@ -84,6 +84,12 @@ body
 .settings-button{
     position: absolute;
     z-index: 5;
+}
+
+.exit-button{
+    position: absolute;
+    z-index: 5;
+    right: 0;
 }
 
 .settings-modal{

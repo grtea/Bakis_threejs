@@ -6,11 +6,8 @@
     <title>ThreeJS Starter</title>
 </head>
 <body>
-    <!-- <audio loop id="sparkleSound" preload="auto" style="display: none">
-        <source src="sounds/sparkle.wav" type="audio/wav">
-	</audio> -->
 
-    <div class="show settings-button">
+    <div class="show settings-button hideDuringGameplay showOnDeath showOnStart">
         <button 
             type="button" 
             class="btn btn-primary m-4"
@@ -20,9 +17,20 @@
         </button>
     </div>
 
+    <div class="show exit-button showOnGameplay" style="display: none;">
+        <button 
+            type="button" 
+            class="btn btn-primary m-4"
+            onclick="exitGameplay()"
+        >
+         Exit
+        <i class="fa-solid fa-person-walking-arrow-right"></i>
+        </button>
+    </div>
+
     <div class="container h-100">
         <!-- POINTS START-->
-        <div class="row d-flex">
+        <div class="row d-flex showOnGameplay showOnDeath"> <!-- this showing isnt tested lol-->
             <div class="show col text-center">
                 <div class="points-background m-auto bg-color">
                     <h3 class="p-2 py-4 m-4">
@@ -33,9 +41,9 @@
             </div>
         </div>
         <!-- POINTS END -->
+        <div class="row d-flex justify-content-center"> <!-- align-items-center  h-100-->
         <!-- SETTINGS START -->
-        <div class="row d-flex justify-content-center h-100"> <!-- align-items-center -->
-            <div class="col settings-modal p-5 bg-color" style="display: none">
+            <div class="col settings-modal p-5 bg-color hideDuringGameplay" style="display: none">
                 <div class="container">
                     <div class="row">
                         <div class="col">
@@ -122,7 +130,7 @@
                                             aria-describedby="basic-addon2"
                                             disabled>
                                         <div class="input-group-append">
-                                          <button class="btn btn-outline-secondary" type="button" id="buttonRightRecord"><i class="fa-solid fa-circle" style="color: red"></i></button>
+                                          <button class="btn btn-outline-secondary" type="button" id="buttonRightRecord"><i class="fa-solid fa-pen" style="color: black"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -138,31 +146,31 @@
                                             aria-describedby="basic-addon2"
                                             disabled>
                                         <div class="input-group-append">
-                                          <button class="btn btn-outline-secondary" type="button" id="buttonLeftRecord"><i class="fa-solid fa-circle" style="color: red"></i></button>
+                                          <button class="btn btn-outline-secondary" type="button" id="buttonLeftRecord"><i class="fa-solid fa-pen" style="color: black"></i></i></button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <!-- <label for="UIColorInput" class="col-sm-9 col-form-label"></label> -->
                                     <div class="col">
-                                        <input 
-                                        type="button" 
+                                        <button 
+                                        type="button"
                                         class="form-control btn btn-danger"
-                                        id="UIColorInput" 
-                                        aria-describedby="emailHelp" 
-                                        onclick="resetOptions()"
-                                        value="Reset to default">
+                                        onclick="resetOptions()">
+                                            <i class="fa-solid fa-arrows-rotate"></i>
+                                            Reset to default
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col">
-                                        <input 
-                                        type="button" 
-                                        class="form-control btn btn-success" 
-                                        id="UIColorInput" 
-                                        aria-describedby="emailHelp"
-                                        onclick="saveChanges()" 
-                                        value="Save changes">
+                                        <button
+                                        type="button"
+                                        class="form-control btn btn-success"
+                                        onclick="saveChanges()">
+                                            <i class="fa-solid fa-floppy-disk"></i>
+                                            Save changes
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -172,7 +180,7 @@
             </div>
         <!-- SETTINGS END -->
         <!-- GAME OVER START -->
-            <div class="col gameOverScreen p-5 bg-color">
+            <div class="col gameOverScreen p-5 bg-color hideDuringGameplay showOnDeath">
                 <h1 class="py-2">GAME OVER</h1>
                 <p>Final score: <span class="pointCount">0</span></p>
                 <button 
@@ -183,10 +191,17 @@
             </div>
         <!-- GAME OVER END -->
         <!-- PLAY START -->
-        <div class="col startGameScreen p-5 bg-color">
+        <div class="col startGameScreen p-5 bg-color hideDuringGameplay showOnStart">
             <h1 class="py-2">START GAME</h1>
             <p>How to play</p>
+            <label for="speedSlider" class="form-label">Select difficulty: <span id="difficultyText">5</span></label>
+            <input type="range" class="form-range" id="speedSlider" min="0.4" max="1" value="0.8" step="0.1">
             <button 
+                type="button"
+                class="startButton btn btn-primary" 
+                onclick="startSpawn()"
+            >Play!</button>
+            <!-- <button 
                 type="button"
                 class="startButton btn btn-primary" 
                 onclick="startSpawnEasy()"
@@ -195,7 +210,7 @@
                 type="button"
                 class="startButton btn btn-primary" 
                 onclick="startSpawnHard()"
-            >Play hard</button>
+            >Play hard</button> -->
         </div>
         <!-- PLAY END -->
         <!--ON SCREEN CONTROLS START-->
