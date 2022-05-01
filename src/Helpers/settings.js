@@ -1,5 +1,6 @@
 var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
 var settingsModal = document.getElementsByClassName('settings-modal')[0];
+var startGameScreen = document.getElementsByClassName('startGameScreen')[0];
 var pointsDiv = document.getElementsByClassName('pointsDiv')[0];
 var html = document.getElementsByTagName("html")[0];
 var body = document.getElementsByTagName("body")[0];
@@ -8,18 +9,27 @@ var UIColorInput = document.getElementById("UIColorInput");
 var buttonRightInput = document.getElementById("buttonRightInput");
 var buttonLeftInput = document.getElementById("buttonLeftInput"); 
 var onScreenBtnCheckbox = document.getElementById('onScreenBtnCheckbox');
+var mouseControlsCheckbox = document.getElementById('mouseControlsCheckbox');
 
 //SETTINGS CONTROL
 function openSettings(){
     settingsModal.style.display = 'inline';
     settingsButton.style.display = 'none';
+    startGameScreen.style.display = 'none';
     // pointsDiv.style.display = 'none';
 }
 window.openSettings = openSettings;
 
 function closeSettings(){
+    // if(!saved){
+    //     // window.speechSynthesis.cancel();
+    //     // var msg = new SpeechSynthesisUtterance();
+    //     // msg.text = "Changes discarded";
+    //     // window.speechSynthesis.speak(msg);
+    // }
     settingsModal.style.display = 'none';
     settingsButton.style.display = 'inline';
+    startGameScreen.style.display = 'inline';
     // pointsDiv.style.display = 'inline';
     loadUserData();
     applyUserData();
@@ -33,6 +43,11 @@ function resetOptions(){
 window.resetOptions = resetOptions;
 
 function saveChanges(){
+    // window.speechSynthesis.cancel();
+    // var msg = new SpeechSynthesisUtterance();
+    // msg.text = "Saved changes";
+    // window.speechSynthesis.speak(msg);
+
     localStorage.setItem("userData", JSON.stringify(window.userData));
     closeSettings();
 }
@@ -40,7 +55,7 @@ window.saveChanges = saveChanges;
 
 //LOADING USER DATA
 export function setDefault(){
-    window.userData.fontSize = "100%";
+    window.userData.fontSize = "110%";
     window.userData.textColor = "#212529";
     window.userData.UIColor = "#ffffff";
     window.userData.rightKey = 39;
@@ -48,6 +63,7 @@ export function setDefault(){
     window.userData.leftKey = 37;
     window.userData.leftKeyName = "ArrowLeft";
     window.userData.onScreenButtons = false;
+    window.userData.mouseControls = false;
 }
 
 export function loadUserData(){
@@ -70,6 +86,7 @@ export function applyUserData(){
     buttonLeftInput.value = window.userData.leftKeyName;
 
     onScreenBtnCheckbox.checked = window.userData.onScreenButtons;
+    mouseControlsCheckbox.checked = window.userData.mouseControls;
 }
 
 //SETTINGS CHANGES
@@ -77,7 +94,6 @@ function increaseTextSize() {
     var fontSize = html.style.fontSize;
     var newfontSizeString = (parseInt(fontSize) + 10).toString();
     var newFontSize = newfontSizeString + "%";
-    console.log(newFontSize);
     html.style.setProperty("font-size",newFontSize);
     window.userData.fontSize = newFontSize;
 }
@@ -87,7 +103,6 @@ function decreaseTextSize() {
     var fontSize = html.style.fontSize;
     var newfontSizeString = (parseInt(fontSize) - 10).toString();
     var newFontSize = newfontSizeString + "%";
-    console.log(newFontSize);
     html.style.setProperty("font-size",newFontSize);
     window.userData.fontSize = newFontSize;
 }
@@ -130,6 +145,7 @@ buttonLeftRecord.addEventListener('click', () => {
 })
 
 onScreenBtnCheckbox.addEventListener('click', () => {
+    console.log(onScreenBtnCheckbox.checked);
     if(onScreenBtnCheckbox.checked){
         window.userData.onScreenButtons = true;
     }
@@ -137,4 +153,13 @@ onScreenBtnCheckbox.addEventListener('click', () => {
         window.userData.onScreenButtons = false;
     }
     applyUserData();
+})
+
+mouseControlsCheckbox.addEventListener('click', () => {
+    if(mouseControlsCheckbox.checked){
+        window.userData.mouseControls = true;
+    }
+    else{
+        window.userData.mouseControls = false;
+    }
 })

@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { laneToPos } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator';
 import './Helpers/settings';
-import { Vector3 } from 'three';
+import { Points, Vector3 } from 'three';
 import { MathUtils } from 'three';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -16,12 +16,16 @@ import { applyUserData, loadUserData, setDefault } from './Helpers/settings';
 
 //ASSETS
 import { sparkleAudio } from './sounds/sparkle.wav';
+import { collectAudio } from './sounds/collect.wav';
+import { dedAudio } from './sounds/ded.wav';
 import { tone1 } from './sounds/htone1.wav';
 import { tone2 } from './sounds/htone2.wav';
 import { tone3 } from './sounds/htone3.wav';
+import { clickAudio } from './sounds/click.wav';
+import { clickNegativeAudio } from './sounds/clickNegative.wav';
 
 
-var canvas, scene, camera, controls, renderer;
+var canvas, scene, camera, controls, renderer, animationFrame;
 var player;
 var listener;
 var playerLane = 2;
@@ -47,6 +51,10 @@ var playerPositionGoal;
 var playerMovingRight = false;
 var playerMovingLeft = false;
 
+//audio
+var buttonAudioNegative;
+var buttonAudio;
+
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
 
@@ -54,11 +62,14 @@ window.userData = {};
 
 //Default settings data
 if(!localStorage.getItem('userData')){
+    console.log("setting up");
     setDefault();
+    localStorage.setItem("userData", JSON.stringify(window.userData));
 }
 
 //Loading userData
 if(localStorage.getItem('userData')){
+    console.log("exists?");
     loadUserData();
 }
 
@@ -67,6 +78,11 @@ applyUserData();
 init();
 
 function init(){
+    // window.speechSynthesis.cancel();
+    // var msg = new SpeechSynthesisUtterance();
+    // msg.text = "New game. Collect donuts and avoid cones to win. Press play to start.";
+    // window.speechSynthesis.speak(msg);
+
     createScene();
     // controls = new OrbitControls(camera, canvas);
     setSounds();
@@ -98,7 +114,7 @@ function createScene(){
         width: window.innerWidth,
         height: window.innerHeight
     }
-    
+
     const planeAspectRatio = 16 / 9;
 
     window.addEventListener('resize', () =>
@@ -145,10 +161,15 @@ function createScene(){
         camera = new THREE.PerspectiveCamera(customfov, sizes.width / sizes.height, 0.1, 1000);
     }
 
-    // camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000)
+    //normal camera
     camera.position.x = 0
     camera.position.y = 7
     camera.position.z = 3.8
+
+    // camera.position.x = 0
+    // camera.position.y = -7
+    // camera.position.z = 2
+
     scene.add(camera)
 
     /**
@@ -162,7 +183,7 @@ function createScene(){
 }
 
 function setSounds(){
-        /**
+    /**
      * Sounds
      */
 
@@ -189,6 +210,52 @@ function setSounds(){
         stepSound3.setBuffer( buffer );
     })
 
+    //button clicks
+    var UIbuttons = document.getElementsByTagName('button');
+    var checkboxes = document.getElementsByClassName('form-check-input');
+
+    var buttonAudioNegative = new THREE.Audio(listener);
+    audioLoader.load('assets/audio/clickNegative.wav', function(buffer) {
+        buttonAudioNegative.setBuffer( buffer );
+
+        for(var btn of UIbuttons){
+            if(btn.classList.contains('btn-negative-click')){
+                btn.addEventListener('click', event => {
+                    buttonAudioNegative.play();
+                })
+            }
+        }
+
+        for(var checkbox of checkboxes){
+            checkbox.addEventListener('click', () => {
+                if(!checkbox.checked){
+                    buttonAudioNegative.play();
+                }
+            })
+        }
+    });
+
+    var buttonAudio = new THREE.Audio(listener);
+    audioLoader.load('assets/audio/click.wav', function(buffer) {
+        buttonAudio.setBuffer( buffer );
+
+        for(var btn of UIbuttons){
+            if(!btn.classList.contains('btn-negative-click')){
+                btn.addEventListener('click', event => {
+                    buttonAudio.play();
+                })
+            }
+        }
+
+        for(var checkbox of checkboxes){
+            checkbox.addEventListener('click', () => {
+                if(checkbox.checked){
+                    buttonAudio.play();
+                }
+            })
+        }
+    });
+
 }
 
 function addGround(){
@@ -207,11 +274,11 @@ function addTree(color){
     cone.justSpawned = true;
 
     const audioLoader = new THREE.AudioLoader();
-    collectSound = new THREE.PositionalAudio(listener);
-    audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
-        collectSound.setBuffer( buffer );
-        collectSound.setRefDistance(1);
-        cone.add(collectSound);
+    collideSound = new THREE.PositionalAudio(listener);
+    audioLoader.load( 'assets/audio/ded.wav', function( buffer ) {
+        collideSound.setBuffer( buffer );
+        collideSound.setRefDistance(10);
+        cone.add(collideSound);
     });
 
     return cone;
@@ -226,9 +293,9 @@ function addCollectable(){
 
     const audioLoader = new THREE.AudioLoader();
     collectSound = new THREE.PositionalAudio(listener);
-    audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
+    audioLoader.load( 'assets/audio/collect.wav', function( buffer ) {
         collectSound.setBuffer( buffer );
-        collectSound.setRefDistance(1);
+        collectSound.setRefDistance(10);
         torus.add(collectSound);
     });
 
@@ -248,9 +315,7 @@ function addPlayer(color) {
 function spawnOnGround(obj, lane, r) {
     const posY = laneToPos(lane);
     var coords = spawnPosition(r, groundCylinder.rotation.x);
-    obj.rotation.x = Math.PI / 2;
-    obj.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1;
-
+    
     obj.position.x += coords.x;
     obj.position.z += coords.z;
     obj.position.y = posY;
@@ -274,8 +339,8 @@ function despawn(objArray, despawnCase){
                 if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
                     obj.justSpawned = false;
                 }
-                var roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-                var roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
+                const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+                const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
 
                 if((roundedSpawnRot < roundedCurrentRot+0.01 && roundedSpawnRot > roundedCurrentRot-0.01) && !obj.justSpawned){
                     groundCylinder.remove(obj);
@@ -286,12 +351,13 @@ function despawn(objArray, despawnCase){
             break;
     } 
 }
+
 function mouseMoveHandler(event){
     // console.log(event);
     var zoneLength = window.innerWidth / 3
     var zone1 = zoneLength;
     var zone2 = zoneLength * 2;
-    if(gamePlaying && !playerMovingLeft && !playerMovingRight){ //&& window.userdata.mouseControls TODO
+    if(gamePlaying && !playerMovingLeft && !playerMovingRight && window.userData.mouseControls){ //&& window.userData.mouseControls TODO
         if(event.clientX < zone1 && player.position.x > -1){
             //Leftmost
             playerMovingLeft = true;
@@ -409,6 +475,12 @@ function animate(){
 
         // // console.log(groundCylinder.rotation);
 
+        // for(var collectable of collectablePool){
+        //     collectable.rotation.x += 0.1;
+        //     collectable.rotation.y += 0.1;
+        //     collectable.rotation.z += 0.1;
+        // }
+
         //  Update Orbital Controls
         if(controls) controls.update()
 
@@ -423,7 +495,7 @@ function animate(){
             for (var element of pointCounter){
                 element.innerHTML = points;
             }
-            // collectSound.play();
+
             despawn(collectablePool, "collision");
         }
 
@@ -447,7 +519,7 @@ function animate(){
         }
         else{
             // Call tick again on the next frame
-            window.requestAnimationFrame(tick);
+            animationFrame = window.requestAnimationFrame(tick);
         }
         if(gamePlaying){
             speed += 0.00001;
@@ -459,6 +531,11 @@ function animate(){
 }
 
 function gameOver(){
+    // window.speechSynthesis.cancel();
+    // var msg = new SpeechSynthesisUtterance();
+    // msg.text = "Game over. Final score " + points;
+    // window.speechSynthesis.speak(msg);
+
     gamePlaying = false;
     var gameOverElements = document.getElementsByClassName("showOnDeath");
     for( var element of gameOverElements){
@@ -475,8 +552,9 @@ function gameOver(){
 /* FUNCTIONS FOR THE DOM */
 function exitGameplay(){
     gameIsOver = true;
-    gameOver();
-    restartScene();
+    // gameOver();
+    // cancelAnimationFrame(animationFrame);
+    // restartScene();
 }
 window.exitGameplay = exitGameplay;
 
@@ -490,6 +568,9 @@ function restartScene(){
         scene.remove(collectable);
     }
     collectablePool = [];
+
+    groundCylinder.remove.apply(groundCylinder, groundCylinder.children);
+    scene.remove.apply(scene, scene.children);
 
     points = 0;
     var pointCounter = document.getElementsByClassName("pointCount");
@@ -509,6 +590,11 @@ function restartScene(){
 window.restartScene = restartScene; //makes function global so index.html can see it !!!!
 
 function startSpawn(){
+    // window.speechSynthesis.cancel();
+    // var msg = new SpeechSynthesisUtterance();
+    // msg.text = "Game start!";
+    // window.speechSynthesis.speak(msg);
+
     gamePlaying = true;
     collisionDistance = speed/2;
     var showOnGameplay = document.getElementsByClassName("showOnGameplay");
@@ -530,11 +616,15 @@ function startSpawn(){
 
         var collectable = addCollectable();
         spawnOnGround(collectable, randLane1, worldSize+0.2);
+        collectable.rotation.x = 0; // to make ring turned
+        collectable.rotation.y = groundCylinder.rotation.x; //offset
         collectablePool.push(collectable);
 
         setTimeout(() => {
             var tree = addTree(0xffff00);
             spawnOnGround(tree, randLane2, worldSize);
+            tree.rotation.x = Math.PI / 2;
+            tree.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1;
             treePool.push(tree);
         }, 700);
 

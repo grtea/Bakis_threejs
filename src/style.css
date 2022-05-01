@@ -100,6 +100,11 @@ body
     background-color: aliceblue;
 }
 
+.font-size-btn{
+    border: 1px solid black !important;
+    border-radius: 15px !important;
+}
+
 .color-picker {
     -webkit-appearance: none;
     -moz-appearance: none;
