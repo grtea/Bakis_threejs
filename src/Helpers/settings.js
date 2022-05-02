@@ -10,6 +10,9 @@ var buttonRightInput = document.getElementById("buttonRightInput");
 var buttonLeftInput = document.getElementById("buttonLeftInput"); 
 var onScreenBtnCheckbox = document.getElementById('onScreenBtnCheckbox');
 var mouseControlsCheckbox = document.getElementById('mouseControlsCheckbox');
+var contrastOutlineCheckbox = document.getElementById('contrastOutlineCheckbox');
+var contrastBackgroundCheckbox = document.getElementById('contrastBackgroundCheckbox');
+var reloadOnSave = false;
 
 //SETTINGS CONTROL
 function openSettings(){
@@ -21,12 +24,6 @@ function openSettings(){
 window.openSettings = openSettings;
 
 function closeSettings(){
-    // if(!saved){
-    //     // window.speechSynthesis.cancel();
-    //     // var msg = new SpeechSynthesisUtterance();
-    //     // msg.text = "Changes discarded";
-    //     // window.speechSynthesis.speak(msg);
-    // }
     settingsModal.style.display = 'none';
     settingsButton.style.display = 'inline';
     startGameScreen.style.display = 'inline';
@@ -43,13 +40,14 @@ function resetOptions(){
 window.resetOptions = resetOptions;
 
 function saveChanges(){
-    // window.speechSynthesis.cancel();
-    // var msg = new SpeechSynthesisUtterance();
-    // msg.text = "Saved changes";
-    // window.speechSynthesis.speak(msg);
-
     localStorage.setItem("userData", JSON.stringify(window.userData));
-    closeSettings();
+    if(reloadOnSave){
+        reloadOnSave = false;
+        window.location.reload();
+    }else{
+        closeSettings();
+    }
+    
 }
 window.saveChanges = saveChanges;
 
@@ -64,6 +62,8 @@ export function setDefault(){
     window.userData.leftKeyName = "ArrowLeft";
     window.userData.onScreenButtons = false;
     window.userData.mouseControls = false;
+    window.userData.highContrast = false;
+    window.userData.outline = false;
 }
 
 export function loadUserData(){
@@ -87,6 +87,9 @@ export function applyUserData(){
 
     onScreenBtnCheckbox.checked = window.userData.onScreenButtons;
     mouseControlsCheckbox.checked = window.userData.mouseControls;
+
+    contrastOutlineCheckbox.checked = window.userData.outline;
+    contrastBackgroundCheckbox.checked = window.userData.highContrast;
 }
 
 //SETTINGS CHANGES
@@ -125,8 +128,10 @@ buttonRightRecord.addEventListener('click', () => {
     buttonRightInput.value = "Recording input..."; 
     buttonRightRecord.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
-        window.userData.rightKey = event.keyCode;
-        window.userData.rightKeyName = event.key;
+        if(event.keyCode != 27){
+            window.userData.rightKey = event.keyCode;
+            window.userData.rightKeyName = event.key;
+        }
         buttonRightRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
         applyUserData();
     }, { once: true });
@@ -135,17 +140,19 @@ buttonRightRecord.addEventListener('click', () => {
 var buttonLeftRecord = document.getElementById("buttonLeftRecord");
 buttonLeftRecord.addEventListener('click', () => {
     buttonLeftInput.value = "Recording input..."; 
-    buttonLeftInput.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
+    buttonLeftRecord.innerHTML = '<i class="fa-solid fa-circle" style="color: red"></i>';
     window.addEventListener('keydown', event => {
-        window.userData.leftKey = event.keyCode;
-        window.userData.leftKeyName = event.key;
+        if(event.keyCode != 27){ //escape option
+            window.userData.leftKey = event.keyCode;
+            window.userData.leftKeyName = event.key;
+        }
         buttonLeftRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
         applyUserData();
     }, { once: true });
 })
 
 onScreenBtnCheckbox.addEventListener('click', () => {
-    console.log(onScreenBtnCheckbox.checked);
+    // console.log(onScreenBtnCheckbox.checked);
     if(onScreenBtnCheckbox.checked){
         window.userData.onScreenButtons = true;
     }
@@ -161,5 +168,22 @@ mouseControlsCheckbox.addEventListener('click', () => {
     }
     else{
         window.userData.mouseControls = false;
+    }
+})
+
+contrastOutlineCheckbox.addEventListener('click', () => {
+    window.userData.outline = contrastOutlineCheckbox.checked;
+});
+
+contrastBackgroundCheckbox.addEventListener('click', () => {
+    window.userData.highContrast = contrastBackgroundCheckbox.checked;
+    reloadOnSave = true;
+})
+
+//checkboxes clickable with enter
+document.addEventListener('keypress', (e) => {
+    if( e.key === "Enter"  && e.target.classList.contains('form-check-input')){
+        // e.target.checked = !e.target.checked;
+        e.target.click();
     }
 })

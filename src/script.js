@@ -1,8 +1,12 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { laneToPos } from './Helpers/logichelpers.js';
-import { spawnPosition } from './Helpers/angleCalculator';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+// import { OutlinePass } from './Helpers/OutlinePass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { laneToPos, DarkenColor } from './Helpers/logichelpers.js';
+import { spawnPosition } from './Helpers/angleCalculator.js';
 import './Helpers/settings';
 import { Points, Vector3 } from 'three';
 import { MathUtils } from 'three';
@@ -25,7 +29,7 @@ import { clickAudio } from './sounds/click.wav';
 import { clickNegativeAudio } from './sounds/clickNegative.wav';
 
 
-var canvas, scene, camera, controls, renderer, animationFrame;
+var canvas, scene, camera, controls, renderer, outlinePassPlayer, composer, animationFrame;
 var player;
 var listener;
 var playerLane = 2;
@@ -51,10 +55,6 @@ var playerPositionGoal;
 var playerMovingRight = false;
 var playerMovingLeft = false;
 
-//audio
-var buttonAudioNegative;
-var buttonAudio;
-
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
 
@@ -74,6 +74,16 @@ if(localStorage.getItem('userData')){
 }
 
 applyUserData();
+
+var groundColor = 0x03fc3d;
+var backgroundColor = 0xc4e6ff;
+
+if(window.userData.highContrast){
+    groundColor = DarkenColor(groundColor, 0x99);
+    backgroundColor = DarkenColor(backgroundColor, 0x99);
+    fogDensity = 0;
+}
+
 
 init();
 
@@ -97,8 +107,9 @@ function createScene(){
 
     // Scene
     scene = new THREE.Scene()
-    scene.background = new THREE.Color( 0xc4e6ff );
+    scene.background = new THREE.Color( backgroundColor );
     scene.fog = new THREE.FogExp2( 0x096b20, fogDensity );
+
 
     // Lights
     const pointLight = new THREE.PointLight(0xffffff, 0.1)
@@ -140,8 +151,12 @@ function createScene(){
         camera.updateProjectionMatrix();
 
         // Update renderer
-        renderer.setSize(sizes.width, sizes.height)
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        renderer.setSize(sizes.width, sizes.height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        composer.setSize(sizes.width, sizes.height);
+
+        composer.render();
     })
 
     /**
@@ -180,6 +195,17 @@ function createScene(){
     })
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    /**
+     * post-processing
+     */
+    composer = new EffectComposer( renderer );
+    composer.addPass( new RenderPass( scene, camera ) );
+
+    outlinePassPlayer = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+    outlinePassPlayer.edgeStrength = 5;
+    outlinePassPlayer.visibleEdgeColor.set('#ffffff');
+    composer.addPass( outlinePassPlayer );
 }
 
 function setSounds(){
@@ -189,9 +215,6 @@ function setSounds(){
 
     listener = new THREE.AudioListener();
     camera.add( listener );
-
-    // collideSound = new THREE.Audio(listener);
-    // audioLoader.load( 'assets/audio/')
 
     const audioLoader = new THREE.AudioLoader();
 
@@ -225,14 +248,6 @@ function setSounds(){
                 })
             }
         }
-
-        for(var checkbox of checkboxes){
-            checkbox.addEventListener('click', () => {
-                if(!checkbox.checked){
-                    buttonAudioNegative.play();
-                }
-            })
-        }
     });
 
     var buttonAudio = new THREE.Audio(listener);
@@ -246,28 +261,32 @@ function setSounds(){
                 })
             }
         }
-
-        for(var checkbox of checkboxes){
-            checkbox.addEventListener('click', () => {
-                if(checkbox.checked){
-                    buttonAudio.play();
-                }
-            })
-        }
     });
 
+    for(var checkbox of checkboxes){
+        console.log(checkbox.checked);
+        checkbox.addEventListener('click', (e) => {
+            console.log(e.target.checked);
+            if(e.target.checked){
+                buttonAudio.play();
+            }
+            else{
+                buttonAudioNegative.play();
+            }
+        })
+    };
 }
 
 function addGround(){
     const geometry = new THREE.CylinderGeometry( worldSize, worldSize, 10, 30 );
-    const material = new THREE.MeshBasicMaterial( {color: 0x03fc3d} );
+    const material = new THREE.MeshBasicMaterial( {color: groundColor} );
     groundCylinder = new THREE.Mesh( geometry, material );
     groundCylinder.rotation.z = Math.PI / 2;
     scene.add( groundCylinder );
 }
 
 function addTree(color){
-    const geometry = new THREE.ConeGeometry( 0.5, 1, 6 );
+    const geometry = new THREE.ConeGeometry( 0.25, 0.5, 6 );
     const material = new THREE.MeshBasicMaterial( {color: color} );
     const cone = new THREE.Mesh( geometry, material );
     cone.spawnRotation = groundCylinder.rotation.x;
@@ -280,6 +299,15 @@ function addTree(color){
         collideSound.setRefDistance(10);
         cone.add(collideSound);
     });
+
+    if(window.userData.outline){
+        var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.BackSide } );
+        var outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
+        outlineMesh.scale.multiplyScalar( 1.1 );
+        cone.add( outlineMesh );
+    }else{
+        cone.scale.multiplyScalar( 1.1 );
+    }
 
     return cone;
 }
@@ -298,6 +326,17 @@ function addCollectable(){
         collectSound.setRefDistance(10);
         torus.add(collectSound);
     });
+
+    if(window.userData.outline){
+        var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.BackSide } );
+        var outlineMesh1 = new THREE.Mesh( geometry, outlineMaterial );
+        outlineMesh1.scale.multiplyScalar( 1.1 );
+        torus.add( outlineMesh1 );
+
+        var outlineMesh2 = new THREE.Mesh( geometry, outlineMaterial );
+        outlineMesh2.scale.multiplyScalar( 0.7 );
+        torus.add( outlineMesh2 );
+    }
 
     return torus;
 }
@@ -416,7 +455,8 @@ function isCollision(objArray, player, cleanup = false){
             obj.isCollided = true;
             isCollided = true;
             if(!cleanup){
-                obj.children[0].play();
+                obj.children[obj.children.length-1].play();
+                // console.log(obj.children[obj.children.length-1]);
             }
             break;
         }
@@ -509,9 +549,6 @@ function animate(){
 
         despawn(collectablePool, "periodic");
         despawn(treePool, "periodic");
-        
-        // Render
-        renderer.render(scene, camera);
 
         if (gameIsOver){
             gameOver();
@@ -525,16 +562,19 @@ function animate(){
             speed += 0.00001;
             collisionDistance = speed/2;
         }
+
+        // Render
+        // renderer.render(scene, camera);
+        composer.render();
     }
 
     tick()
 }
 
 function gameOver(){
-    // window.speechSynthesis.cancel();
-    // var msg = new SpeechSynthesisUtterance();
-    // msg.text = "Game over. Final score " + points;
-    // window.speechSynthesis.speak(msg);
+    var msg = new SpeechSynthesisUtterance();
+    msg.text = "Game over. Final score " + points;
+    window.speechSynthesis.speak(msg);
 
     gamePlaying = false;
     var gameOverElements = document.getElementsByClassName("showOnDeath");
@@ -590,10 +630,9 @@ function restartScene(){
 window.restartScene = restartScene; //makes function global so index.html can see it !!!!
 
 function startSpawn(){
-    // window.speechSynthesis.cancel();
-    // var msg = new SpeechSynthesisUtterance();
-    // msg.text = "Game start!";
-    // window.speechSynthesis.speak(msg);
+    var msg = new SpeechSynthesisUtterance();
+    msg.text = "Game start!";
+    window.speechSynthesis.speak(msg);
 
     gamePlaying = true;
     collisionDistance = speed/2;
@@ -607,6 +646,10 @@ function startSpawn(){
     }
     loadButtons();
 
+    if(window.userData.outline){
+        outlinePassPlayer.selectedObjects.push(player);
+    }
+
     make = setInterval(() => {
         var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
         var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
@@ -617,14 +660,15 @@ function startSpawn(){
         var collectable = addCollectable();
         spawnOnGround(collectable, randLane1, worldSize+0.2);
         collectable.rotation.x = 0; // to make ring turned
-        collectable.rotation.y = groundCylinder.rotation.x; //offset
+        collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
         collectablePool.push(collectable);
 
         setTimeout(() => {
             var tree = addTree(0xffff00);
-            spawnOnGround(tree, randLane2, worldSize);
-            tree.rotation.x = Math.PI / 2;
-            tree.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1;
+            spawnOnGround(tree, randLane2, worldSize+0.25);
+            // tree.position.x += 1;
+            tree.rotation.x = Math.PI / 2; //rotate
+            tree.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
             treePool.push(tree);
         }, 700);
 
