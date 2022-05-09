@@ -75,8 +75,8 @@ if(localStorage.getItem('userData')){
 
 applyUserData();
 
-var groundColor = 0x03fc3d;
-var backgroundColor = 0xc4e6ff;
+var groundColor = 0x009e74; //0x03fc3d
+var backgroundColor = 0x56b4e9; //0xc4e6ff
 
 if(window.userData.highContrast){
     groundColor = DarkenColor(groundColor, 0x99);
@@ -664,7 +664,7 @@ function startSpawn(){
         collectablePool.push(collectable);
 
         setTimeout(() => {
-            var tree = addTree(0xffff00);
+            var tree = addTree(0xffff00); //0xffff00
             spawnOnGround(tree, randLane2, worldSize+0.25);
             // tree.position.x += 1;
             tree.rotation.x = Math.PI / 2; //rotate
