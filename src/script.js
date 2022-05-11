@@ -8,7 +8,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { laneToPos, DarkenColor } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator.js';
 import './Helpers/settings';
-import { Points, Vector3 } from 'three';
+import { EqualStencilFunc, Points, Vector3 } from 'three';
 import { MathUtils } from 'three';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -34,7 +34,7 @@ var player;
 var listener;
 var playerLane = 2;
 var groundCylinder;
-var treePool = [];
+var obstaclePool = [];
 var collectablePool = [];
 var collisionDistance = 0.4;
 var fov = 50;
@@ -45,9 +45,11 @@ var worldSize = 7;
 var fogDensity = 0.2;
 
 var collectSound, collideSound, stepSound1, stepSound2, stepSound3;
+var buttonAudioNegative, buttonAudio;
 
 var gameIsOver = false;
 var gamePlaying = false;
+window.settingsOpen = false;
 var make;
 
 //controls
@@ -62,14 +64,13 @@ window.userData = {};
 
 //Default settings data
 if(!localStorage.getItem('userData')){
-    console.log("setting up");
     setDefault();
-    localStorage.setItem("userData", JSON.stringify(window.userData));
+    localStorage.setItem("userData", 
+        JSON.stringify(window.userData));
 }
 
 //Loading userData
 if(localStorage.getItem('userData')){
-    console.log("exists?");
     loadUserData();
 }
 
@@ -91,13 +92,14 @@ function init(){
     // window.speechSynthesis.cancel();
     // var msg = new SpeechSynthesisUtterance();
     // msg.text = "New game. Collect donuts and avoid cones to win. Press play to start.";
+    // msg.volume = window.userData.speechVolume;
     // window.speechSynthesis.speak(msg);
 
     createScene();
     // controls = new OrbitControls(camera, canvas);
+    addPlayer(0xff0000);
     setSounds();
     addGround();
-    addPlayer(0xff0000);
     animate();
 }
 
@@ -214,59 +216,65 @@ function setSounds(){
      */
 
     listener = new THREE.AudioListener();
-    camera.add( listener );
+    player.add( listener );
 
     const audioLoader = new THREE.AudioLoader();
 
-    stepSound1 = new THREE.Audio(listener);
+    stepSound1 = new THREE.PositionalAudio(listener);
     audioLoader.load('assets/audio/htone1.wav', function( buffer ) {
         stepSound1.setBuffer( buffer );
+        stepSound1.setRefDistance(5);
+        stepSound1.setVolume(window.userData.gameVolume);
     })
 
-    stepSound2 = new THREE.Audio(listener);
+    stepSound2 = new THREE.PositionalAudio(listener);
     audioLoader.load('assets/audio/htone2.wav', function( buffer ) {
         stepSound2.setBuffer( buffer );
+        stepSound2.setRefDistance(5);
+        stepSound2.setVolume(window.userData.gameVolume);
     })
 
-    stepSound3 = new THREE.Audio(listener);
+    stepSound3 = new THREE.PositionalAudio(listener);
     audioLoader.load('assets/audio/htone3.wav', function( buffer ) {
         stepSound3.setBuffer( buffer );
+        stepSound3.setRefDistance(5);
+        stepSound3.setVolume(window.userData.gameVolume);
     })
 
+    if(!buttonAudio){
     //button clicks
     var UIbuttons = document.getElementsByTagName('button');
     var checkboxes = document.getElementsByClassName('form-check-input');
 
-    var buttonAudioNegative = new THREE.Audio(listener);
-    audioLoader.load('assets/audio/clickNegative.wav', function(buffer) {
-        buttonAudioNegative.setBuffer( buffer );
-
-        for(var btn of UIbuttons){
-            if(btn.classList.contains('btn-negative-click')){
-                btn.addEventListener('click', event => {
-                    buttonAudioNegative.play();
-                })
-            }
-        }
-    });
-
-    var buttonAudio = new THREE.Audio(listener);
+    buttonAudio = new THREE.Audio(listener);
     audioLoader.load('assets/audio/click.wav', function(buffer) {
         buttonAudio.setBuffer( buffer );
-
-        for(var btn of UIbuttons){
-            if(!btn.classList.contains('btn-negative-click')){
-                btn.addEventListener('click', event => {
-                    buttonAudio.play();
-                })
-            }
-        }
+        buttonAudio.setVolume(window.userData.uiVolume);
     });
 
+    buttonAudioNegative = new THREE.Audio(listener);
+    audioLoader.load('assets/audio/clickNegative.wav', function(buffer) {
+        buttonAudioNegative.setBuffer( buffer );
+        buttonAudioNegative.setVolume(window.userData.uiVolume);
+    });
+
+    for(var btn of UIbuttons){
+        if(btn.classList.contains('btn-negative-click')){
+            btn.addEventListener('click', event => {
+                buttonAudioNegative.play();
+            })
+        }
+        else{
+            btn.addEventListener('click', event => {
+                buttonAudio.play();
+            })
+        }
+    }
+
     for(var checkbox of checkboxes){
-        console.log(checkbox.checked);
+        // console.log(checkbox.checked);
         checkbox.addEventListener('click', (e) => {
-            console.log(e.target.checked);
+            // console.log(e.target.checked);
             if(e.target.checked){
                 buttonAudio.play();
             }
@@ -275,6 +283,8 @@ function setSounds(){
             }
         })
     };
+
+    }
 }
 
 function addGround(){
@@ -285,7 +295,7 @@ function addGround(){
     scene.add( groundCylinder );
 }
 
-function addTree(color){
+function addObstacle(color){
     const geometry = new THREE.ConeGeometry( 0.25, 0.5, 6 );
     const material = new THREE.MeshBasicMaterial( {color: color} );
     const cone = new THREE.Mesh( geometry, material );
@@ -297,6 +307,7 @@ function addTree(color){
     audioLoader.load( 'assets/audio/ded.wav', function( buffer ) {
         collideSound.setBuffer( buffer );
         collideSound.setRefDistance(10);
+        collideSound.setVolume(window.userData.gameVolume);
         cone.add(collideSound);
     });
 
@@ -323,7 +334,8 @@ function addCollectable(){
     collectSound = new THREE.PositionalAudio(listener);
     audioLoader.load( 'assets/audio/collect.wav', function( buffer ) {
         collectSound.setBuffer( buffer );
-        collectSound.setRefDistance(10);
+        collectSound.setRefDistance(5);
+        collectSound.setVolume(window.userData.gameVolume);
         torus.add(collectSound);
     });
 
@@ -348,6 +360,7 @@ function addPlayer(color) {
     player.position.y = 6.8;
     player.position.x = laneToPos(playerLane);
     player.position.z = 2.3;
+    player.rotation.x += Math.PI;
     scene.add(player);
 }
 
@@ -392,7 +405,6 @@ function despawn(objArray, despawnCase){
 }
 
 function mouseMoveHandler(event){
-    // console.log(event);
     var zoneLength = window.innerWidth / 3
     var zone1 = zoneLength;
     var zone2 = zoneLength * 2;
@@ -439,7 +451,17 @@ function keyDownHandler(event){
             exitGameplay();
         }
     }
-    
+
+    if(!gamePlaying && !gameIsOver && !settingsOpen){
+        if(event.keyCode == 9){
+            openSettings();
+        }
+    }
+    else if(!gamePlaying && !gameIsOver && settingsOpen){
+        if(event.keyCode == 9){
+            closeSettings();
+        }
+    }
 }
 window.keyDownHandler = keyDownHandler;
 
@@ -456,7 +478,6 @@ function isCollision(objArray, player, cleanup = false){
             isCollided = true;
             if(!cleanup){
                 obj.children[obj.children.length-1].play();
-                // console.log(obj.children[obj.children.length-1]);
             }
             break;
         }
@@ -513,19 +534,11 @@ function animate(){
             playStepSound();
         }
 
-        // // console.log(groundCylinder.rotation);
-
-        // for(var collectable of collectablePool){
-        //     collectable.rotation.x += 0.1;
-        //     collectable.rotation.y += 0.1;
-        //     collectable.rotation.z += 0.1;
-        // }
-
         //  Update Orbital Controls
         if(controls) controls.update()
 
         // Collision detection
-        if(isCollision(treePool, player)){
+        if(isCollision(obstaclePool, player)){
             gameIsOver = true;
         }
 
@@ -540,15 +553,15 @@ function animate(){
         }
 
         //general cleanup jei blogai ispawnintu netycia XD
-        treePool.forEach(tree => {
-            if(isCollision(collectablePool, tree, true)){
+        obstaclePool.forEach(obstacle => {
+            if(isCollision(collectablePool, obstacle, true)){
                 console.log("cleanup");
                 despawn(collectablePool, "collision");
             }
         })
 
         despawn(collectablePool, "periodic");
-        despawn(treePool, "periodic");
+        despawn(obstaclePool, "periodic");
 
         if (gameIsOver){
             gameOver();
@@ -574,6 +587,7 @@ function animate(){
 function gameOver(){
     var msg = new SpeechSynthesisUtterance();
     msg.text = "Game over. Final score " + points;
+    msg.volume = window.userData.speechVolume;
     window.speechSynthesis.speak(msg);
 
     gamePlaying = false;
@@ -581,6 +595,8 @@ function gameOver(){
     for( var element of gameOverElements){
         element.style.display = 'inline';
     }
+    var heightDiv = document.getElementsByClassName("showOnDeath2")[0];
+    heightDiv.style.height = '100%';
     var showOnGameplay = document.getElementsByClassName("showOnGameplay");
     for( var element of showOnGameplay){
         element.style.display = 'none';
@@ -599,10 +615,10 @@ function exitGameplay(){
 window.exitGameplay = exitGameplay;
 
 function restartScene(){
-    for(var tree in treePool){
-        scene.remove(tree);
+    for(var obstacle in obstaclePool){
+        scene.remove(obstacle);
     }
-    treePool = [];
+    obstaclePool = [];
 
     for(var collectable in collectablePool){
         scene.remove(collectable);
@@ -632,6 +648,7 @@ window.restartScene = restartScene; //makes function global so index.html can se
 function startSpawn(){
     var msg = new SpeechSynthesisUtterance();
     msg.text = "Game start!";
+    msg.volume = window.userData.speechVolume;
     window.speechSynthesis.speak(msg);
 
     gamePlaying = true;
@@ -644,6 +661,8 @@ function startSpawn(){
     for (var element of hideDuringGameplay){
         element.style.display = 'none';
     }
+    var heightDiv = document.getElementsByClassName("hideDuringGameplay2")[0];
+    heightDiv.style.height = 0;
     loadButtons();
 
     if(window.userData.outline){
@@ -664,19 +683,12 @@ function startSpawn(){
         collectablePool.push(collectable);
 
         setTimeout(() => {
-            var tree = addTree(0xffff00); //0xffff00
-            spawnOnGround(tree, randLane2, worldSize+0.25);
-            // tree.position.x += 1;
-            tree.rotation.x = Math.PI / 2; //rotate
-            tree.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
-            treePool.push(tree);
+            var obstacle = addObstacle(0xffff00);
+            spawnOnGround(obstacle, randLane2, worldSize+0.25);
+            obstacle.rotation.x = Math.PI / 2; //rotate
+            obstacle.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
+            obstaclePool.push(obstacle);
         }, 700);
-
-        var worldPos = new Vector3;
-        collectable.getWorldPosition(worldPos);
-        // console.log("local: ", collectable.position);
-        // console.log("world: ", worldPos);
-
     }, 1000);
 }
 window.startSpawn = startSpawn;

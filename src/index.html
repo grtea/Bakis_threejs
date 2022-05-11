@@ -51,8 +51,8 @@
                                 <h4>UI options</h4>
                                 <div class="form-group row">
                                     <label for="textsizeButtons" class="col col-md-6 col-form-label" id="textSize">Text Size</label>
-                                    <div class="col col-md-6">
-                                        <div class="form-control" id="textsizeButtons">
+                                    <div class="col-md-6">
+                                        <div class="form-control bg-color" id="textsizeButtons">
                                             <div class="row">
                                                 <div class="col">
                                                     <button 
@@ -61,7 +61,7 @@
                                                     aria-label="increase"
                                                     aria-describedby="textSize"
                                                     onclick="increaseTextSize()"
-                                                    ><i class="fa-solid fa-plus"></i></button>
+                                                    ><i class="fa-solid fa-plus settingsIcon"></i></button>
                                                 </div>
                                                 <div class="col">
                                                     <button 
@@ -70,7 +70,7 @@
                                                     aria-label="decrease"
                                                     aria-describedby="textSize"
                                                     onclick="decreaseTextSize()"
-                                                    ><i class="fa-solid fa-minus"></i></button>
+                                                    ><i class="fa-solid fa-minus settingsIcon"></i></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -78,7 +78,7 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="textColorInput" class="col col-md-6 col-form-label" id="textColor">Text Color</label>
-                                    <div class="col col-md-6">
+                                    <div class="col-md-6">
                                         <input 
                                         type="color" 
                                         class="form-control color-picker mx-auto" 
@@ -89,7 +89,7 @@
                                 </div>
                                 <div class="form-group row">
                                     <label for="UIColorInput" class="col col-md-6 col-form-label" id="backgroundColor">UI background color</label>
-                                    <div class="col col-md-6">
+                                    <div class="col-md-6">
                                         <input 
                                         type="color" 
                                         class="form-control color-picker mx-auto" 
@@ -122,69 +122,97 @@
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="buttonRightInput" class="col col-form-label" id="mapBtnRight">Map button right</label>
-                                    <div class="input-group mb-3 col">
-                                        <input 
-                                            type="text" 
-                                            class="form-control"
-                                            id="buttonRightInput" 
-                                            placeholder="Button Right" 
-                                            aria-label="Button Right" 
-                                            aria-describedby="mapBtnRight"
-                                            disabled>
-                                        <div class="input-group-append">
-                                            <button 
-                                                class="btn btn-outline-secondary" 
-                                                type="button" 
-                                                id="buttonRightRecord"
-                                                aria-label="Edit"
-                                                aria-describedby="buttonRightInput">
-                                                <i class="fa-solid fa-pen" style="color: black"></i>
-                                            </button>
+                                    <label for="buttonRightInput" class="col-form-label col-md-6" id="mapBtnRight">Map button right</label>
+                                    <div class="mb-3 col-md-6">
+                                        <div class="input-group">
+                                            <input 
+                                                type="text" 
+                                                class="form-control"
+                                                id="buttonRightInput" 
+                                                placeholder="Button Right" 
+                                                aria-label="Button Right" 
+                                                aria-describedby="mapBtnRight"
+                                                disabled>
+                                            <div class="input-group-append">
+                                                <button 
+                                                    class="btn btn-outline-secondary" 
+                                                    type="button" 
+                                                    id="buttonRightRecord"
+                                                    aria-label="Edit"
+                                                    aria-describedby="buttonRightInput">
+                                                    <i class="fa-solid fa-pen settingsIcon"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label for="buttonLeftInput" class="col col-form-label" id="mapBtnLeft">Map button left</label>
-                                    <div class="input-group mb-3 col">
-                                        <input 
-                                            type="text" 
-                                            class="form-control" 
-                                            id="buttonLeftInput" 
-                                            placeholder="Button Left" 
-                                            aria-label="Button Left" 
-                                            aria-describedby="mapBtnLeft"
-                                            disabled>
-                                        <div class="input-group-append">
-                                            <button 
-                                                class="btn btn-outline-secondary" 
-                                                type="button" 
-                                                id="buttonLeftRecord"
-                                                aria-label="Edit"
-                                                aria-describedby="buttonLeftInput">
-                                                <i class="fa-solid fa-pen" style="color: black"></i></i>
-                                            </button>
+                                    <label for="buttonLeftInput" class="col-form-label col-md-6" id="mapBtnLeft">Map button left</label>
+                                    <div class="mb-3 col-md-6">
+                                        <div class="input-group">
+                                            <input 
+                                                type="text" 
+                                                class="form-control" 
+                                                id="buttonLeftInput" 
+                                                placeholder="Button Left" 
+                                                aria-label="Button Left" 
+                                                aria-describedby="mapBtnLeft"
+                                                disabled>
+                                            <div class="input-group-append">
+                                                <button 
+                                                    class="btn btn-outline-secondary" 
+                                                    type="button" 
+                                                    id="buttonLeftRecord"
+                                                    aria-label="Edit"
+                                                    aria-describedby="buttonLeftInput">
+                                                    <i class="fa-solid fa-pen settingsIcon"></i></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
     
                                 <!-- graphics -->
                                 <h4>Graphics</h4>
+                                <fieldset class="form-group">
+                                    <div class="row">
+                                        <legend class="col col-md-6">High contrast</legend>
+                                        <div class="col col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="contrastOutlineCheckbox" name="ContrastRadio" value="1">
+                                                <label class="form-check-label" for="contrastOutlineCheckbox">
+                                                Outline meshes
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="contrastBackgroundCheckbox" name="ContrastRadio" value="2">
+                                                <label class="form-check-label" for="contrastBackgroundCheckbox">
+                                                Darken background
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                
+
+                                <!--volume-->
+                                <h4>Sound</h4>
                                 <div class="form-group row">
-                                    <div class="col col-md-6">High contrast</div>
+                                    <label class="col-form-label col-md-6" for="uiSoundSlider">Button sound volume</label>
                                     <div class="col col-md-6 mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="contrastOutlineCheckbox" name="ContrastRadio" value="1">
-                                            <label class="form-check-label" for="contrastOutlineCheckbox">
-                                            Outline meshes
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="contrastBackgroundCheckbox" name="ContrastRadio" value="2">
-                                            <label class="form-check-label" for="contrastBackgroundCheckbox">
-                                            Darken background
-                                            </label>
-                                        </div>
+                                        <input type="range" class="form-range" id="uiSoundSlider" min="0" max="1" value="1" step="0.2">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-form-label col-md-6" for="gameSoundSlider">Game sound volume</label>
+                                    <div class="col col-md-6 mb-2">
+                                        <input type="range" class="form-range" id="gameSoundSlider" min="0" max="1" value="1" step="0.2">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-form-label col-md-6" for="speechSoundSlider">Speech sound volume</label>
+                                    <div class="col col-md-6 mb-2">
+                                        <input type="range" class="form-range" id="speechSoundSlider" min="0" max="1" value="1" step="0.2">
                                     </div>
                                 </div>
                                 
@@ -231,7 +259,7 @@
             </div>
         </div>
         <!-- POINTS END -->
-        <div class="row d-flex justify-content-center align-items-center h-100"> <!-- align-items-center h-100-->
+        <div class="row d-flex justify-content-center align-items-center hideDuringGameplay2 showOnDeath2" style="height: 100%;"> <!-- align-items-center h-100-->
             <!-- PLAY START -->
             <div class="col startGameScreen p-5 bg-color hideDuringGameplay showOnStart m-5">
                 <h1 class="py-2">START GAME</h1>
@@ -240,7 +268,7 @@
                 <input type="range" class="form-range" id="speedSlider" min="0.4" max="1" value="0.8" step="0.1">
                 <button 
                     type="button"
-                    class="startButton btn btn-primary btn-lg" 
+                    class="startButton btn btn-primary btn-md" 
                     onclick="startSpawn()"
                 >Play!</button>
             </div>
@@ -258,8 +286,8 @@
             <!-- GAME OVER END -->
             <!--ON SCREEN CONTROLS START-->
             <div class="onScreenControls show" style="display: none">
-                <button class="btn btn-primary btn-lg" onclick="keyDownHandler({keyCode: window.userData.leftKey})" aria-label="Go Left"><i class="fa-solid fa-arrow-left-long"></i></button>
-                <button class="btn btn-primary btn-lg" onclick="keyDownHandler({keyCode: window.userData.rightKey})" aria-label="Go Right"><i class="fa-solid fa-arrow-right-long"></i></button>
+                <button class="btn btn-primary btn-md" onclick="keyDownHandler({keyCode: window.userData.leftKey})" aria-label="Go Left"><i class="fa-solid fa-arrow-left-long"></i></button>
+                <button class="btn btn-primary btn-md" onclick="keyDownHandler({keyCode: window.userData.rightKey})" aria-label="Go Right"><i class="fa-solid fa-arrow-right-long"></i></button>
             </div>
             <!--ON SCREEN CONTROLS END-->
         </div>

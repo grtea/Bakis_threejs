@@ -1,7 +1,6 @@
 var settingsButton = document.getElementsByClassName('settings-button')[0].getElementsByTagName('button')[0];
 var settingsModal = document.getElementsByClassName('settings-modal')[0];
 var startGameScreen = document.getElementsByClassName('startGameScreen')[0];
-var pointsDiv = document.getElementsByClassName('pointsDiv')[0];
 var html = document.getElementsByTagName("html")[0];
 var body = document.getElementsByTagName("body")[0];
 var textColorInput = document.getElementById("textColorInput");
@@ -12,6 +11,9 @@ var onScreenBtnCheckbox = document.getElementById('onScreenBtnCheckbox');
 var mouseControlsCheckbox = document.getElementById('mouseControlsCheckbox');
 var contrastOutlineCheckbox = document.getElementById('contrastOutlineCheckbox');
 var contrastBackgroundCheckbox = document.getElementById('contrastBackgroundCheckbox');
+var uiSoundSlider = document.getElementById('uiSoundSlider');
+var gameSoundSlider = document.getElementById('gameSoundSlider');
+var speechSoundSlider = document.getElementById('speechSoundSlider');
 var reloadOnSave = false;
 
 //SETTINGS CONTROL
@@ -19,7 +21,7 @@ function openSettings(){
     settingsModal.style.display = 'inline';
     settingsButton.style.display = 'none';
     startGameScreen.style.display = 'none';
-    // pointsDiv.style.display = 'none';
+    window.settingsOpen = true;
 }
 window.openSettings = openSettings;
 
@@ -27,7 +29,7 @@ function closeSettings(){
     settingsModal.style.display = 'none';
     settingsButton.style.display = 'inline';
     startGameScreen.style.display = 'inline';
-    // pointsDiv.style.display = 'inline';
+    window.settingsOpen = false;
     loadUserData();
     applyUserData();
 }
@@ -47,7 +49,6 @@ function saveChanges(){
     }else{
         closeSettings();
     }
-    
 }
 window.saveChanges = saveChanges;
 
@@ -64,6 +65,9 @@ export function setDefault(){
     window.userData.mouseControls = false;
     window.userData.highContrast = false;
     window.userData.outline = false;
+    window.userData.uiVolume = 1.0;
+    window.userData.gameVolume = 1.0;
+    window.userData.speechVolume = 1.0;
 }
 
 export function loadUserData(){
@@ -75,6 +79,8 @@ export function applyUserData(){
     
     body.style.color = window.userData.textColor;
     textColorInput.value = window.userData.textColor;
+    document.documentElement.style.setProperty('--border-color', window.userData.textColor);
+    document.documentElement.style.setProperty('--settings-icon-color', window.userData.textColor);
 
     UIColorInput.value = window.userData.UIColor;
     var bgColorElements = document.getElementsByClassName('bg-color');
@@ -90,6 +96,10 @@ export function applyUserData(){
 
     contrastOutlineCheckbox.checked = window.userData.outline;
     contrastBackgroundCheckbox.checked = window.userData.highContrast;
+
+    uiSoundSlider.value = window.userData.uiVolume;
+    gameSoundSlider.value = window.userData.gameVolume;
+    speechSoundSlider.value = window.userData.speechVolume;
 }
 
 //SETTINGS CHANGES
@@ -113,8 +123,8 @@ window.decreaseTextSize = decreaseTextSize;
 
 //Color Inputs
 textColorInput.addEventListener('change', () => {
-    body.style.color = textColorInput.value;
     window.userData.textColor = textColorInput.value;
+    applyUserData();
 });
 
 UIColorInput.addEventListener('change', () => {
@@ -132,7 +142,7 @@ buttonRightRecord.addEventListener('click', () => {
             window.userData.rightKey = event.keyCode;
             window.userData.rightKeyName = event.key;
         }
-        buttonRightRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
+        buttonRightRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: '+ window.userData.textColor +'"></i>';
         applyUserData();
     }, { once: true });
 })
@@ -146,7 +156,7 @@ buttonLeftRecord.addEventListener('click', () => {
             window.userData.leftKey = event.keyCode;
             window.userData.leftKeyName = event.key;
         }
-        buttonLeftRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: black"></i>';
+        buttonLeftRecord.innerHTML = '<i class="fa-solid fa-pen" style="color: '+ window.userData.textColor +'"></i>';
         applyUserData();
     }, { once: true });
 })
@@ -187,3 +197,19 @@ document.addEventListener('keypress', (e) => {
         e.target.click();
     }
 })
+
+//Volume sliders
+uiSoundSlider.addEventListener('change', () => {
+    window.userData.uiVolume = parseFloat(uiSoundSlider.value);
+    reloadOnSave = true;
+});
+
+gameSoundSlider.addEventListener('change', () => {
+    window.userData.gameVolume = parseFloat(gameSoundSlider.value);
+    reloadOnSave = true;
+});
+
+speechSoundSlider.addEventListener('change', () => {
+    window.userData.speechVolume = parseFloat(speechSoundSlider.value);
+    reloadOnSave = true;
+});

@@ -1,3 +1,8 @@
+:root{
+    --border-color: black;
+    --settings-icon-color: black;
+}
+
 *
 {
     margin: 0;
@@ -101,15 +106,18 @@ body
 }
 
 .font-size-btn{
-    border: 1px solid black !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 15px !important;
+}
+
+.font-size-btn:focus{
+    background-color: transparent !important;
 }
 
 .color-picker {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    /* max-width: 100px !important; */
     min-height: 50px;
     background-color: transparent !important;
     border: none !important;
@@ -117,13 +125,21 @@ body
 }
 .color-picker::-webkit-color-swatch {
     border-radius: 15px;
-    border: 1px solid black;
+    border: 1px solid var(--border-color);
 }
 .color-picker::-moz-color-swatch {
     border-radius: 15px;
-    border: 1px solid black;
+    border: 1px solid var(--border-color);
 }
 
 #textsizeButtons{
     border: none !important;
+}
+
+.settingsIcon{
+    color: var(--settings-icon-color);
+}
+
+legend{
+    font-size: var(--bs-body-font-size) !important;
 }
