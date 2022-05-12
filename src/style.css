@@ -144,6 +144,15 @@ legend{
     font-size: var(--bs-body-font-size) !important;
 }
 
+.save-btn{
+    width: 12rem;
+    float: right;
+}
+
+.reset-btn{
+    width: 12rem;
+}
+
 /* #speedSlider{
     max-width: ;
 } */

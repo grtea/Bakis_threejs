@@ -19,6 +19,7 @@ var reloadOnSave = false;
 //settings modal columns
 var singleColumnDiv = document.getElementById('singleColumnDiv');
 var doubleColumnDivs = document.getElementsByClassName('doubleColumnDiv');
+var uiOptionsHr = document.getElementById('uiOptionsHr');
 
 //SETTINGS CONTROL
 function openSettings(){
@@ -133,13 +134,14 @@ function decreaseTextSize() {
 window.decreaseTextSize = decreaseTextSize;
 
 function arrangeColumns(fontsize){
-    if(fontsize>140){
+    if(fontsize>130){
         //replace row with col and remove cols
         singleColumnDiv.classList.remove("row");
         singleColumnDiv.classList.add("col");
         for (let col of doubleColumnDivs){
             col.classList.remove("col-lg-6");
         }
+        uiOptionsHr.innerHTML = "<hr>";
     }else{
         //make divs cols and replace big col with row
         singleColumnDiv.classList.remove("col");
@@ -147,6 +149,7 @@ function arrangeColumns(fontsize){
         for (let col of doubleColumnDivs){
             col.classList.add("col-lg-6");
         }
+        uiOptionsHr.innerHTML = "";
     }
 }
 
