@@ -5,6 +5,7 @@ ROTX = GROUNDCYLINDER ROTATION X
 ----------------------------------*/
 
 export function spawnPosition(r, rotX){
+    rotX = rotX % 6.28319;
     var a = -rotX + Math.PI;
 
     var coords = {x: 0, z: 0};

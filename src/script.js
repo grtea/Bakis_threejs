@@ -45,6 +45,7 @@ var worldSize = 7;
 var fogDensity = 0.2;
 
 var collectSound, collideSound, stepSound1, stepSound2, stepSound3;
+var ringIndicatorSound, coneIndicatorSound;
 var buttonAudioNegative, buttonAudio;
 
 var gameIsOver = false;
@@ -301,6 +302,7 @@ function addObstacle(color){
     const cone = new THREE.Mesh( geometry, material );
     cone.spawnRotation = groundCylinder.rotation.x;
     cone.justSpawned = true;
+    cone.indicated = false;
 
     const audioLoader = new THREE.AudioLoader();
     collideSound = new THREE.PositionalAudio(listener);
@@ -309,6 +311,13 @@ function addObstacle(color){
         collideSound.setRefDistance(10);
         collideSound.setVolume(window.userData.gameVolume);
         cone.add(collideSound);
+    });
+    coneIndicatorSound = new THREE.PositionalAudio(listener);
+    audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
+        coneIndicatorSound.setBuffer( buffer );
+        coneIndicatorSound.setRefDistance(5);
+        coneIndicatorSound.setVolume(window.userData.gameVolume);
+        cone.add(coneIndicatorSound);
     });
 
     if(window.userData.outline){
@@ -329,6 +338,7 @@ function addCollectable(){
     const torus = new THREE.Mesh( geometry, material );
     torus.spawnRotation = groundCylinder.rotation.x;
     torus.justSpawned = true;
+    torus.indicated = false;
 
     const audioLoader = new THREE.AudioLoader();
     collectSound = new THREE.PositionalAudio(listener);
@@ -336,7 +346,17 @@ function addCollectable(){
         collectSound.setBuffer( buffer );
         collectSound.setRefDistance(5);
         collectSound.setVolume(window.userData.gameVolume);
+        collectSound.name = "collider";
         torus.add(collectSound);
+    });
+
+    ringIndicatorSound = new THREE.PositionalAudio(listener);
+    audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
+        ringIndicatorSound.setBuffer( buffer );
+        ringIndicatorSound.setRefDistance(5);
+        ringIndicatorSound.setVolume(window.userData.gameVolume);
+        ringIndicatorSound.name = "indicator";
+        torus.add(ringIndicatorSound);
     });
 
     if(window.userData.outline){
@@ -386,22 +406,65 @@ function despawn(objArray, despawnCase){
                 }
             });
             break;
-        case "periodic":
-            objArray.forEach(obj => {
-                if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
-                    obj.justSpawned = false;
-                }
-                const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-                const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
+        // case "periodic":
+        //     objArray.forEach(obj => {
+        //         if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
+        //             obj.justSpawned = false;
+        //         }
+        //         const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+        //         const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
 
-                if((roundedSpawnRot < roundedCurrentRot+0.01 && roundedSpawnRot > roundedCurrentRot-0.01) && !obj.justSpawned){
-                    groundCylinder.remove(obj);
-                    scene.remove(obj);
-                    objArray.splice(objArray.indexOf(obj), 1);
-                }
-            });
-            break;
+        //         if((roundedSpawnRot < roundedCurrentRot+0.5 && roundedSpawnRot > roundedCurrentRot-0.5) && !obj.justSpawned){
+        //             groundCylinder.remove(obj);
+        //             scene.remove(obj);
+        //             objArray.splice(objArray.indexOf(obj), 1);
+        //         }
+        //     });
+        //     break;
     } 
+}
+
+function periodicDespawn(objArray, spawnOffset){
+    for(let obj of objArray){
+        const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+        const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+        const goalRot = roundedSpawnRot + spawnOffset;
+        // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
+        const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
+
+        if(roundedCurrentRot >= goalRot){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
+            console.log("Deleted", obj);
+            // console.log(distanceToGoal);
+            //console.log(Math.abs(roundedCurrentRot - spawnOffset), spawnOffset);
+            // console.log(obj.children);
+
+            groundCylinder.remove(obj);
+            scene.remove(obj);
+            objArray.splice(objArray.indexOf(obj), 1);
+        }
+    }
+
+    // for(let obj of objArray){
+    //     if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
+    //             obj.justSpawned = false;
+    //         }
+    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+    //     const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+    //     const goalRot = (roundedSpawnRot + spawnOffset) % THREE.Math.degToRad(360);
+    //     // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
+    //     const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
+
+    //     if(distanceToGoal <= 0.5 && !obj.justSpawned){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
+    //         console.log("Deleted", obj);
+    //         console.log(distanceToGoal);
+    //         //console.log(Math.abs(roundedCurrentRot - spawnOffset), spawnOffset);
+    //         // console.log(obj.children);
+
+    //         groundCylinder.remove(obj);
+    //         scene.remove(obj);
+    //         objArray.splice(objArray.indexOf(obj), 1);
+    //     }
+    // }
 }
 
 function mouseMoveHandler(event){
@@ -477,7 +540,12 @@ function isCollision(objArray, player, cleanup = false){
             obj.isCollided = true;
             isCollided = true;
             if(!cleanup){
-                obj.children[obj.children.length-1].play();
+                // obj.children[obj.children.length-2].play();
+                for (let child of obj.children){
+                    if(child.name == "collider"){
+                        child.play();
+                    }
+                }
             }
             break;
         }
@@ -486,6 +554,92 @@ function isCollision(objArray, player, cleanup = false){
         }
     }
     return isCollided; 
+}
+
+function checkVisibility(objArray, spawnOffset){
+    for(let obj of objArray){
+        if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
+                obj.justSpawned = false;
+            }
+        const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+        const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+        const goalRot = roundedSpawnRot + spawnOffset;
+        // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
+        const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
+
+        if(roundedCurrentRot >= goalRot && !obj.indicated){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
+            console.log("I see u", obj);
+            console.log(roundedCurrentRot, goalRot);
+            console.log(obj.children);
+
+            // obj.children[obj.children.length-1].play();
+            for (let child of obj.children){
+                if(child.name == "indicator"){
+                    child.play();
+                }
+            }
+
+            obj.indicated = true;
+        }
+    }
+    // for(let obj of objArray){
+    //     if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
+    //             obj.justSpawned = false;
+    //         }
+    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+    //     const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+    //     const goalRot = (roundedSpawnRot + spawnOffset) % THREE.Math.degToRad(360);
+    //     // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
+    //     const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
+
+    //     if(distanceToGoal <= 0.5 && !obj.justSpawned){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
+    //         console.log("I see u", obj);
+    //         // console.log(roundedCurrentRot, soundRingRot)
+    //         console.log(obj.children);
+
+    //         // obj.children[obj.children.length-1].play();
+    //         for (let child of obj.children){
+    //             if(child.name == "indicator"){
+    //                 child.play();
+    //             }
+    //         }
+
+    //         obj.indicated = true;
+    //     }
+    // }
+
+    // for(let obj of objArray){
+    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+    //     let roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+    //     let soundRingRot = roundedSpawnRot + spawnOffset; //Math.PI*8/9
+
+    //     if(soundRingRot >= 6){
+    //         if(roundedCurrentRot>roundedSpawnRot && roundedCurrentRot<=6 && roundedSpawnRot < spawnOffset){ //if starting rot is less than 2.8 this gives a false positive
+    //             roundedCurrentRot += roundedSpawnRot;
+    //         }
+    //         else if(roundedCurrentRot>=0 && roundedCurrentRot <= soundRingRot){
+    //             soundRingRot -= 6;
+    //         }
+    //     }
+    //     else{
+    //         // console.log(roundedCurrentRot, soundRingRot, obj.indicated);
+    //     }
+
+    //     if(roundedCurrentRot >= soundRingRot && !obj.indicated){
+    //         console.log("I see u", obj);
+    //         console.log(roundedCurrentRot, soundRingRot)
+    //         console.log(obj.children);
+
+    //         // obj.children[obj.children.length-1].play();
+    //         for (let child of obj.children){
+    //             if(child.name == "indicator"){
+    //                 child.play();
+    //             }
+    //         }
+
+    //         obj.indicated = true;
+    //     }
+    // }
 }
 
 function playStepSound(){
@@ -514,7 +668,8 @@ function animate(){
         const elapsedTime = clock.getElapsedTime()
 
         // Update objects
-        groundCylinder.rotation.x = elapsedTime*speed % THREE.Math.degToRad(360);
+        groundCylinder.rotation.x = elapsedTime*speed;
+        // console.log(groundCylinder.rotation);
 
         //Player movement animation
         if(playerMovingRight && playerPositionGoal>player.position.x){
@@ -548,9 +703,12 @@ function animate(){
             for (var element of pointCounter){
                 element.innerHTML = points;
             }
-
             despawn(collectablePool, "collision");
         }
+
+        //Indicator sounds
+        checkVisibility(collectablePool, 2.8);
+        // checkVisibility(obstaclePool);
 
         //general cleanup jei blogai ispawnintu netycia XD
         obstaclePool.forEach(obstacle => {
@@ -560,8 +718,10 @@ function animate(){
             }
         })
 
-        despawn(collectablePool, "periodic");
-        despawn(obstaclePool, "periodic");
+        // despawn(collectablePool, "periodic");
+        // despawn(obstaclePool, "periodic");
+
+        periodicDespawn(collectablePool, 5.5);
 
         if (gameIsOver){
             gameOver();
@@ -651,6 +811,13 @@ function startSpawn(){
     msg.volume = window.userData.speechVolume;
     window.speechSynthesis.speak(msg);
 
+    // groundCylinder.rotation.x = 4;
+    // var collectable = addCollectable();
+    // spawnOnGround(collectable, 1, worldSize+0.2);
+    // collectable.rotation.x = 0; // to make ring turned
+    // collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
+    // collectablePool.push(collectable);
+
     gamePlaying = true;
     collisionDistance = speed/2;
     var showOnGameplay = document.getElementsByClassName("showOnGameplay");
@@ -682,13 +849,13 @@ function startSpawn(){
         collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
         collectablePool.push(collectable);
 
-        setTimeout(() => {
-            var obstacle = addObstacle(0xffff00);
-            spawnOnGround(obstacle, randLane2, worldSize+0.25);
-            obstacle.rotation.x = Math.PI / 2; //rotate
-            obstacle.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
-            obstaclePool.push(obstacle);
-        }, 700);
+        // setTimeout(() => {
+        //     var obstacle = addObstacle(0xffff00);
+        //     spawnOnGround(obstacle, randLane2, worldSize+0.25);
+        //     obstacle.rotation.x = Math.PI / 2; //rotate
+        //     obstacle.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
+        //     obstaclePool.push(obstacle);
+        // }, 700);
     }, 1000);
 }
 window.startSpawn = startSpawn;
