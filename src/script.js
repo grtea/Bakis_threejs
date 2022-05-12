@@ -27,11 +27,13 @@ import { tone2 } from './sounds/htone2.wav';
 import { tone3 } from './sounds/htone3.wav';
 import { clickAudio } from './sounds/click.wav';
 import { clickNegativeAudio } from './sounds/clickNegative.wav';
+import { bonkIncomingAudio } from './sounds/bonk-incoming1.wav';
+
 
 
 var canvas, scene, camera, controls, renderer, outlinePassPlayer, composer, animationFrame;
 var player;
-var listener;
+var listener, listener2;
 var playerLane = 2;
 var groundCylinder;
 var obstaclePool = [];
@@ -85,6 +87,9 @@ if(window.userData.highContrast){
     backgroundColor = DarkenColor(backgroundColor, 0x99);
     fogDensity = 0;
 }
+if(window.userData.outline){
+    fogDensity = 0;
+}
 
 
 init();
@@ -99,6 +104,7 @@ function init(){
     createScene();
     // controls = new OrbitControls(camera, canvas);
     addPlayer(0xff0000);
+    addListener();
     setSounds();
     addGround();
     animate();
@@ -296,9 +302,9 @@ function addGround(){
     scene.add( groundCylinder );
 }
 
-function addObstacle(color){
+function addObstacle(){
     const geometry = new THREE.ConeGeometry( 0.25, 0.5, 6 );
-    const material = new THREE.MeshBasicMaterial( {color: color} );
+    const material = new THREE.MeshBasicMaterial( {color: 0xee00ff} );
     const cone = new THREE.Mesh( geometry, material );
     cone.spawnRotation = groundCylinder.rotation.x;
     cone.justSpawned = true;
@@ -310,13 +316,15 @@ function addObstacle(color){
         collideSound.setBuffer( buffer );
         collideSound.setRefDistance(10);
         collideSound.setVolume(window.userData.gameVolume);
+        collideSound.name = "collider";
         cone.add(collideSound);
     });
-    coneIndicatorSound = new THREE.PositionalAudio(listener);
-    audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
+    coneIndicatorSound = new THREE.PositionalAudio(listener2);
+    audioLoader.load( 'assets/audio/bonk-incoming1.wav', function( buffer ) {
         coneIndicatorSound.setBuffer( buffer );
         coneIndicatorSound.setRefDistance(5);
-        coneIndicatorSound.setVolume(window.userData.gameVolume);
+        coneIndicatorSound.setVolume(window.userData.indicatorVolume);
+        coneIndicatorSound.name = "indicator";
         cone.add(coneIndicatorSound);
     });
 
@@ -334,7 +342,7 @@ function addObstacle(color){
 
 function addCollectable(){
     const geometry = new THREE.TorusGeometry(0.1, 0.05, 7, 13, 6.283185307179586);
-    const material = new THREE.MeshBasicMaterial({color: 0xf59e42});
+    const material = new THREE.MeshBasicMaterial({color: 0xffff00}); //0xf59e42
     const torus = new THREE.Mesh( geometry, material );
     torus.spawnRotation = groundCylinder.rotation.x;
     torus.justSpawned = true;
@@ -350,11 +358,11 @@ function addCollectable(){
         torus.add(collectSound);
     });
 
-    ringIndicatorSound = new THREE.PositionalAudio(listener);
+    ringIndicatorSound = new THREE.PositionalAudio(listener2);
     audioLoader.load( 'assets/audio/sparkle.wav', function( buffer ) {
         ringIndicatorSound.setBuffer( buffer );
         ringIndicatorSound.setRefDistance(5);
-        ringIndicatorSound.setVolume(window.userData.gameVolume);
+        ringIndicatorSound.setVolume(window.userData.indicatorVolume);
         ringIndicatorSound.name = "indicator";
         torus.add(ringIndicatorSound);
     });
@@ -384,6 +392,20 @@ function addPlayer(color) {
     scene.add(player);
 }
 
+function addListener(){
+    const geometry = new THREE.SphereGeometry( 0.09, 32, 16 );
+    const material = new THREE.MeshBasicMaterial( { color: 'Oxffffff' } );
+    const listenerObject = new THREE.Mesh( geometry, material );
+    listenerObject.position.y = 6.8;
+    listenerObject.position.x = laneToPos(2);
+    player.position.z = 2.3;
+    listenerObject.material.transparent = true;
+
+    listener2 = new THREE.AudioListener();
+    listenerObject.add(listener2);
+    scene.add(listenerObject);
+}
+
 function spawnOnGround(obj, lane, r) {
     const posY = laneToPos(lane);
     var coords = spawnPosition(r, groundCylinder.rotation.x);
@@ -395,33 +417,14 @@ function spawnOnGround(obj, lane, r) {
     groundCylinder.add( obj );
 }
 
-function despawn(objArray, despawnCase){
-    switch (despawnCase){
-        case "collision":
-            objArray.forEach(obj => {
-                if(obj.isCollided == true){
-                    groundCylinder.remove(obj);
-                    scene.remove(obj);
-                    objArray.splice(objArray.indexOf(obj), 1);
-                }
-            });
-            break;
-        // case "periodic":
-        //     objArray.forEach(obj => {
-        //         if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
-        //             obj.justSpawned = false;
-        //         }
-        //         const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-        //         const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 100)/100
-
-        //         if((roundedSpawnRot < roundedCurrentRot+0.5 && roundedSpawnRot > roundedCurrentRot-0.5) && !obj.justSpawned){
-        //             groundCylinder.remove(obj);
-        //             scene.remove(obj);
-        //             objArray.splice(objArray.indexOf(obj), 1);
-        //         }
-        //     });
-        //     break;
-    } 
+function despawn(objArray){
+    objArray.forEach(obj => {
+        if(obj.isCollided == true){
+            groundCylinder.remove(obj);
+            scene.remove(obj);
+            objArray.splice(objArray.indexOf(obj), 1);
+        }
+    });
 }
 
 function periodicDespawn(objArray, spawnOffset){
@@ -429,42 +432,13 @@ function periodicDespawn(objArray, spawnOffset){
         const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
         const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
         const goalRot = roundedSpawnRot + spawnOffset;
-        // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
-        const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
 
-        if(roundedCurrentRot >= goalRot){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
-            console.log("Deleted", obj);
-            // console.log(distanceToGoal);
-            //console.log(Math.abs(roundedCurrentRot - spawnOffset), spawnOffset);
-            // console.log(obj.children);
-
+        if(roundedCurrentRot >= goalRot){
             groundCylinder.remove(obj);
             scene.remove(obj);
             objArray.splice(objArray.indexOf(obj), 1);
         }
     }
-
-    // for(let obj of objArray){
-    //     if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
-    //             obj.justSpawned = false;
-    //         }
-    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-    //     const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
-    //     const goalRot = (roundedSpawnRot + spawnOffset) % THREE.Math.degToRad(360);
-    //     // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
-    //     const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
-
-    //     if(distanceToGoal <= 0.5 && !obj.justSpawned){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
-    //         console.log("Deleted", obj);
-    //         console.log(distanceToGoal);
-    //         //console.log(Math.abs(roundedCurrentRot - spawnOffset), spawnOffset);
-    //         // console.log(obj.children);
-
-    //         groundCylinder.remove(obj);
-    //         scene.remove(obj);
-    //         objArray.splice(objArray.indexOf(obj), 1);
-    //     }
-    // }
 }
 
 function mouseMoveHandler(event){
@@ -558,19 +532,11 @@ function isCollision(objArray, player, cleanup = false){
 
 function checkVisibility(objArray, spawnOffset){
     for(let obj of objArray){
-        if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
-                obj.justSpawned = false;
-            }
         const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
         const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
         const goalRot = roundedSpawnRot + spawnOffset;
-        // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
-        const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
 
         if(roundedCurrentRot >= goalRot && !obj.indicated){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
-            console.log("I see u", obj);
-            console.log(roundedCurrentRot, goalRot);
-            console.log(obj.children);
 
             // obj.children[obj.children.length-1].play();
             for (let child of obj.children){
@@ -582,64 +548,6 @@ function checkVisibility(objArray, spawnOffset){
             obj.indicated = true;
         }
     }
-    // for(let obj of objArray){
-    //     if((obj.spawnRotation + Math.PI) % THREE.Math.degToRad(360) <= groundCylinder.rotation.x){
-    //             obj.justSpawned = false;
-    //         }
-    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-    //     const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
-    //     const goalRot = (roundedSpawnRot + spawnOffset) % THREE.Math.degToRad(360);
-    //     // console.log(Math.abs(roundedCurrentRot - goalRot), roundedCurrentRot, goalRot)
-    //     const distanceToGoal = Math.abs(roundedCurrentRot - goalRot);
-
-    //     if(distanceToGoal <= 0.5 && !obj.justSpawned){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
-    //         console.log("I see u", obj);
-    //         // console.log(roundedCurrentRot, soundRingRot)
-    //         console.log(obj.children);
-
-    //         // obj.children[obj.children.length-1].play();
-    //         for (let child of obj.children){
-    //             if(child.name == "indicator"){
-    //                 child.play();
-    //             }
-    //         }
-
-    //         obj.indicated = true;
-    //     }
-    // }
-
-    // for(let obj of objArray){
-    //     const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-    //     let roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
-    //     let soundRingRot = roundedSpawnRot + spawnOffset; //Math.PI*8/9
-
-    //     if(soundRingRot >= 6){
-    //         if(roundedCurrentRot>roundedSpawnRot && roundedCurrentRot<=6 && roundedSpawnRot < spawnOffset){ //if starting rot is less than 2.8 this gives a false positive
-    //             roundedCurrentRot += roundedSpawnRot;
-    //         }
-    //         else if(roundedCurrentRot>=0 && roundedCurrentRot <= soundRingRot){
-    //             soundRingRot -= 6;
-    //         }
-    //     }
-    //     else{
-    //         // console.log(roundedCurrentRot, soundRingRot, obj.indicated);
-    //     }
-
-    //     if(roundedCurrentRot >= soundRingRot && !obj.indicated){
-    //         console.log("I see u", obj);
-    //         console.log(roundedCurrentRot, soundRingRot)
-    //         console.log(obj.children);
-
-    //         // obj.children[obj.children.length-1].play();
-    //         for (let child of obj.children){
-    //             if(child.name == "indicator"){
-    //                 child.play();
-    //             }
-    //         }
-
-    //         obj.indicated = true;
-    //     }
-    // }
 }
 
 function playStepSound(){
@@ -703,25 +611,23 @@ function animate(){
             for (var element of pointCounter){
                 element.innerHTML = points;
             }
-            despawn(collectablePool, "collision");
+            despawn(collectablePool);
         }
 
         //Indicator sounds
         checkVisibility(collectablePool, 2.8);
-        // checkVisibility(obstaclePool);
+        checkVisibility(obstaclePool, 2.8);
 
         //general cleanup jei blogai ispawnintu netycia XD
         obstaclePool.forEach(obstacle => {
             if(isCollision(collectablePool, obstacle, true)){
                 console.log("cleanup");
-                despawn(collectablePool, "collision");
+                despawn(collectablePool);
             }
         })
 
-        // despawn(collectablePool, "periodic");
-        // despawn(obstaclePool, "periodic");
-
         periodicDespawn(collectablePool, 5.5);
+        periodicDespawn(obstaclePool, 5.5);
 
         if (gameIsOver){
             gameOver();
@@ -836,6 +742,7 @@ function startSpawn(){
         outlinePassPlayer.selectedObjects.push(player);
     }
 
+    var spawnPeriod = 800/speed;
     make = setInterval(() => {
         var randLane1 = Math.floor(Math.random() * (4 - 1) + 1);
         var randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
@@ -843,20 +750,28 @@ function startSpawn(){
             randLane2 = Math.floor(Math.random() * (4 - 1) + 1);
         }
 
-        var collectable = addCollectable();
-        spawnOnGround(collectable, randLane1, worldSize+0.2);
-        collectable.rotation.x = 0; // to make ring turned
-        collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
-        collectablePool.push(collectable);
+        var spawnTimeout1 = Math.floor(Math.random() * (spawnPeriod - 0 + 1));
+        var spawnTimeout2 = Math.floor(Math.random() * (spawnPeriod - 0 + 1));
+        while(spawnTimeout1==spawnTimeout2){
+            spawnTimeout2 = Math.floor(Math.random() * (spawnPeriod - 0 + 1));
+        }
 
-        // setTimeout(() => {
-        //     var obstacle = addObstacle(0xffff00);
-        //     spawnOnGround(obstacle, randLane2, worldSize+0.25);
-        //     obstacle.rotation.x = Math.PI / 2; //rotate
-        //     obstacle.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
-        //     obstaclePool.push(obstacle);
-        // }, 700);
-    }, 1000);
+        setTimeout(() => {
+            var collectable = addCollectable();
+            spawnOnGround(collectable, randLane1, worldSize+0.2);
+            collectable.rotation.x = 0; // to make ring turned
+            collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
+            collectablePool.push(collectable);
+        }, spawnTimeout2);
+        
+        setTimeout(() => {
+            var obstacle = addObstacle();
+            spawnOnGround(obstacle, randLane2, worldSize+0.25);
+            obstacle.rotation.x = Math.PI / 2; //rotate
+            obstacle.rotation.z = Math.PI / 2 + groundCylinder.rotation.x * -1; //offset ground rotation
+            obstaclePool.push(obstacle);
+        }, spawnTimeout1);
+    }, spawnPeriod);
 }
 window.startSpawn = startSpawn;
 

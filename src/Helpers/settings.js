@@ -14,6 +14,7 @@ var contrastBackgroundCheckbox = document.getElementById('contrastBackgroundChec
 var uiSoundSlider = document.getElementById('uiSoundSlider');
 var gameSoundSlider = document.getElementById('gameSoundSlider');
 var speechSoundSlider = document.getElementById('speechSoundSlider');
+var indicatorSoundSlider = document.getElementById('indicatorSoundSlider');
 var reloadOnSave = false;
 
 //SETTINGS CONTROL
@@ -68,6 +69,7 @@ export function setDefault(){
     window.userData.uiVolume = 1.0;
     window.userData.gameVolume = 1.0;
     window.userData.speechVolume = 1.0;
+    window.userData.indicatorVolume = 1.0;
 }
 
 export function loadUserData(){
@@ -100,6 +102,7 @@ export function applyUserData(){
     uiSoundSlider.value = window.userData.uiVolume;
     gameSoundSlider.value = window.userData.gameVolume;
     speechSoundSlider.value = window.userData.speechVolume;
+    indicatorSoundSlider.value = window.userData.indicatorVolume;
 }
 
 //SETTINGS CHANGES
@@ -211,5 +214,10 @@ gameSoundSlider.addEventListener('change', () => {
 
 speechSoundSlider.addEventListener('change', () => {
     window.userData.speechVolume = parseFloat(speechSoundSlider.value);
+    reloadOnSave = true;
+});
+
+indicatorSoundSlider.addEventListener('change', () => {
+    window.userData.indicatorVolume = parseFloat(indicatorSoundSlider.value);
     reloadOnSave = true;
 });
