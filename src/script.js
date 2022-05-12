@@ -307,7 +307,6 @@ function addObstacle(){
     const material = new THREE.MeshBasicMaterial( {color: 0xee00ff} );
     const cone = new THREE.Mesh( geometry, material );
     cone.spawnRotation = groundCylinder.rotation.x;
-    cone.justSpawned = true;
     cone.indicated = false;
 
     const audioLoader = new THREE.AudioLoader();
@@ -345,7 +344,6 @@ function addCollectable(){
     const material = new THREE.MeshBasicMaterial({color: 0xffff00}); //0xf59e42
     const torus = new THREE.Mesh( geometry, material );
     torus.spawnRotation = groundCylinder.rotation.x;
-    torus.justSpawned = true;
     torus.indicated = false;
 
     const audioLoader = new THREE.AudioLoader();
@@ -394,7 +392,7 @@ function addPlayer(color) {
 
 function addListener(){
     const geometry = new THREE.SphereGeometry( 0.09, 32, 16 );
-    const material = new THREE.MeshBasicMaterial( { color: 'Oxffffff' } );
+    const material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
     const listenerObject = new THREE.Mesh( geometry, material );
     listenerObject.position.y = 6.8;
     listenerObject.position.x = laneToPos(2);
@@ -489,16 +487,16 @@ function keyDownHandler(event){
         }
     }
 
-    if(!gamePlaying && !gameIsOver && !settingsOpen){
-        if(event.keyCode == 9){
-            openSettings();
-        }
-    }
-    else if(!gamePlaying && !gameIsOver && settingsOpen){
-        if(event.keyCode == 9){
-            closeSettings();
-        }
-    }
+    // if(!gamePlaying && !gameIsOver && !settingsOpen){
+    //     if(event.keyCode == 27){
+    //         openSettings();
+    //     }
+    // }
+    // else if(!gamePlaying && !gameIsOver && settingsOpen){
+    //     if(event.keyCode == 27){
+    //         closeSettings();
+    //     }
+    // }
 }
 window.keyDownHandler = keyDownHandler;
 

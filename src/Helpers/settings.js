@@ -16,6 +16,9 @@ var gameSoundSlider = document.getElementById('gameSoundSlider');
 var speechSoundSlider = document.getElementById('speechSoundSlider');
 var indicatorSoundSlider = document.getElementById('indicatorSoundSlider');
 var reloadOnSave = false;
+//settings modal columns
+var singleColumnDiv = document.getElementById('singleColumnDiv');
+var doubleColumnDivs = document.getElementsByClassName('doubleColumnDiv');
 
 //SETTINGS CONTROL
 function openSettings(){
@@ -78,6 +81,7 @@ export function loadUserData(){
 
 export function applyUserData(){
     html.style.setProperty("font-size", window.userData.fontSize);
+    arrangeColumns(parseInt(window.userData.fontSize));
     
     body.style.color = window.userData.textColor;
     textColorInput.value = window.userData.textColor;
@@ -108,21 +112,43 @@ export function applyUserData(){
 //SETTINGS CHANGES
 function increaseTextSize() {
     var fontSize = html.style.fontSize;
-    var newfontSizeString = (parseInt(fontSize) + 10).toString();
+    var newFontSizeInt = parseInt(fontSize) + 10;
+    var newfontSizeString = newFontSizeInt.toString();
     var newFontSize = newfontSizeString + "%";
-    html.style.setProperty("font-size",newFontSize);
+    html.style.setProperty("font-size", newFontSize);
     window.userData.fontSize = newFontSize;
+    arrangeColumns(newFontSizeInt);
 }
 window.increaseTextSize = increaseTextSize;
 
 function decreaseTextSize() {
     var fontSize = html.style.fontSize;
-    var newfontSizeString = (parseInt(fontSize) - 10).toString();
+    var newFontSizeInt = parseInt(fontSize) - 10;
+    var newfontSizeString = newFontSizeInt.toString();
     var newFontSize = newfontSizeString + "%";
     html.style.setProperty("font-size",newFontSize);
     window.userData.fontSize = newFontSize;
+    arrangeColumns(newFontSizeInt);
 }
 window.decreaseTextSize = decreaseTextSize;
+
+function arrangeColumns(fontsize){
+    if(fontsize>140){
+        //replace row with col and remove cols
+        singleColumnDiv.classList.remove("row");
+        singleColumnDiv.classList.add("col");
+        for (let col of doubleColumnDivs){
+            col.classList.remove("col-lg-6");
+        }
+    }else{
+        //make divs cols and replace big col with row
+        singleColumnDiv.classList.remove("col");
+        singleColumnDiv.classList.add("row");
+        for (let col of doubleColumnDivs){
+            col.classList.add("col-lg-6");
+        }
+    }
+}
 
 //Color Inputs
 textColorInput.addEventListener('change', () => {
