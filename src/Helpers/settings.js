@@ -59,7 +59,7 @@ window.saveChanges = saveChanges;
 
 //LOADING USER DATA
 export function setDefault(){
-    window.userData.fontSize = "110%";
+    window.userData.fontSize = "140%";
     window.userData.textColor = "#212529";
     window.userData.UIColor = "#ffffff";
     window.userData.rightKey = 39;

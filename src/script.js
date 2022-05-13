@@ -2,7 +2,6 @@ import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-// import { OutlinePass } from './Helpers/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { laneToPos, DarkenColor } from './Helpers/logichelpers.js';
@@ -28,8 +27,6 @@ import { tone3 } from './sounds/htone3.wav';
 import { clickAudio } from './sounds/click.wav';
 import { clickNegativeAudio } from './sounds/clickNegative.wav';
 import { bonkIncomingAudio } from './sounds/bonk-incoming1.wav';
-
-
 
 var canvas, scene, camera, controls, renderer, outlinePassPlayer, composer, animationFrame;
 var player;
@@ -79,8 +76,8 @@ if(localStorage.getItem('userData')){
 
 applyUserData();
 
-var groundColor = 0x009e74; //0x03fc3d
-var backgroundColor = 0x56b4e9; //0xc4e6ff
+var groundColor = 0x009e74; 
+var backgroundColor = 0x56b4e9;
 
 if(window.userData.highContrast){
     groundColor = DarkenColor(groundColor, 0x99);
@@ -95,15 +92,8 @@ if(window.userData.outline){
 init();
 
 function init(){
-    // window.speechSynthesis.cancel();
-    // var msg = new SpeechSynthesisUtterance();
-    // msg.text = "New game. Collect donuts and avoid cones to win. Press play to start.";
-    // msg.volume = window.userData.speechVolume;
-    // window.speechSynthesis.speak(msg);
-
     createScene();
-    // controls = new OrbitControls(camera, canvas);
-    addPlayer(0xff0000);
+    addPlayer();
     addListener();
     setSounds();
     addGround();
@@ -190,10 +180,6 @@ function createScene(){
     camera.position.y = 7
     camera.position.z = 3.8
 
-    // camera.position.x = 0
-    // camera.position.y = -7
-    // camera.position.z = 2
-
     scene.add(camera)
 
     /**
@@ -279,9 +265,7 @@ function setSounds(){
     }
 
     for(var checkbox of checkboxes){
-        // console.log(checkbox.checked);
         checkbox.addEventListener('click', (e) => {
-            // console.log(e.target.checked);
             if(e.target.checked){
                 buttonAudio.play();
             }
@@ -318,6 +302,7 @@ function addObstacle(){
         collideSound.name = "collider";
         cone.add(collideSound);
     });
+
     coneIndicatorSound = new THREE.PositionalAudio(listener2);
     audioLoader.load( 'assets/audio/bonk-incoming1.wav', function( buffer ) {
         coneIndicatorSound.setBuffer( buffer );
@@ -379,9 +364,9 @@ function addCollectable(){
     return torus;
 }
 
-function addPlayer(color) {
+function addPlayer() {
     const geometry = new THREE.SphereGeometry( 0.09, 32, 16 );
-    const material = new THREE.MeshBasicMaterial( { color: color } );
+    const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
     player = new THREE.Mesh( geometry, material );
     player.position.y = 6.8;
     player.position.x = laneToPos(playerLane);
@@ -425,13 +410,9 @@ function despawn(objArray){
     });
 }
 
-function periodicDespawn(objArray, spawnOffset){
+function periodicDespawn(objArray){
     for(let obj of objArray){
-        const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-        const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
-        const goalRot = roundedSpawnRot + spawnOffset;
-
-        if(roundedCurrentRot >= goalRot){
+        if(hasTravelledDistance(obj, 5.5)){
             groundCylinder.remove(obj);
             scene.remove(obj);
             objArray.splice(objArray.indexOf(obj), 1);
@@ -443,7 +424,7 @@ function mouseMoveHandler(event){
     var zoneLength = window.innerWidth / 3
     var zone1 = zoneLength;
     var zone2 = zoneLength * 2;
-    if(gamePlaying && !playerMovingLeft && !playerMovingRight && window.userData.mouseControls){ //&& window.userData.mouseControls TODO
+    if(gamePlaying && !playerMovingLeft && !playerMovingRight && window.userData.mouseControls){
         if(event.clientX < zone1 && player.position.x > -1){
             //Leftmost
             playerMovingLeft = true;
@@ -466,7 +447,6 @@ function mouseMoveHandler(event){
             playerPositionGoal = player.position.x + 1;
         }
     }
-    
 }
 
 function keyDownHandler(event){
@@ -486,17 +466,6 @@ function keyDownHandler(event){
             exitGameplay();
         }
     }
-
-    // if(!gamePlaying && !gameIsOver && !settingsOpen){
-    //     if(event.keyCode == 27){
-    //         openSettings();
-    //     }
-    // }
-    // else if(!gamePlaying && !gameIsOver && settingsOpen){
-    //     if(event.keyCode == 27){
-    //         closeSettings();
-    //     }
-    // }
 }
 window.keyDownHandler = keyDownHandler;
 
@@ -512,7 +481,6 @@ function isCollision(objArray, player, cleanup = false){
             obj.isCollided = true;
             isCollided = true;
             if(!cleanup){
-                // obj.children[obj.children.length-2].play();
                 for (let child of obj.children){
                     if(child.name == "collider"){
                         child.play();
@@ -528,23 +496,29 @@ function isCollision(objArray, player, cleanup = false){
     return isCollided; 
 }
 
-function checkVisibility(objArray, spawnOffset){
+function checkVisibility(objArray){
     for(let obj of objArray){
-        const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
-        const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
-        const goalRot = roundedSpawnRot + spawnOffset;
-
-        if(roundedCurrentRot >= goalRot && !obj.indicated){ //Math.abs(6-roundedCurrentRot) >= goalRot &&
-
-            // obj.children[obj.children.length-1].play();
+        if(hasTravelledDistance(obj, 2.8) && !obj.indicated){
             for (let child of obj.children){
                 if(child.name == "indicator"){
                     child.play();
                 }
             }
-
             obj.indicated = true;
         }
+    }
+}
+
+function hasTravelledDistance(obj, distance){
+    const roundedSpawnRot = Math.round(obj.spawnRotation * 1000)/1000;
+    const roundedCurrentRot = Math.round(groundCylinder.rotation.x * 1000)/1000;
+    const goalRot = roundedSpawnRot + distance;
+
+    if(roundedCurrentRot >= goalRot){
+        return true;
+    }
+    else{
+        return false;
     }
 }
 
@@ -575,7 +549,6 @@ function animate(){
 
         // Update objects
         groundCylinder.rotation.x = elapsedTime*speed;
-        // console.log(groundCylinder.rotation);
 
         //Player movement animation
         if(playerMovingRight && playerPositionGoal>player.position.x){
@@ -595,9 +568,6 @@ function animate(){
             playStepSound();
         }
 
-        //  Update Orbital Controls
-        if(controls) controls.update()
-
         // Collision detection
         if(isCollision(obstaclePool, player)){
             gameIsOver = true;
@@ -613,8 +583,8 @@ function animate(){
         }
 
         //Indicator sounds
-        checkVisibility(collectablePool, 2.8);
-        checkVisibility(obstaclePool, 2.8);
+        checkVisibility(collectablePool);
+        checkVisibility(obstaclePool);
 
         //general cleanup jei blogai ispawnintu netycia XD
         obstaclePool.forEach(obstacle => {
@@ -624,8 +594,8 @@ function animate(){
             }
         })
 
-        periodicDespawn(collectablePool, 5.5);
-        periodicDespawn(obstaclePool, 5.5);
+        periodicDespawn(collectablePool);
+        periodicDespawn(obstaclePool);
 
         if (gameIsOver){
             gameOver();
@@ -635,6 +605,7 @@ function animate(){
             // Call tick again on the next frame
             animationFrame = window.requestAnimationFrame(tick);
         }
+
         if(gamePlaying){
             speed += 0.00001;
             collisionDistance = speed/2;
@@ -672,9 +643,6 @@ function gameOver(){
 /* FUNCTIONS FOR THE DOM */
 function exitGameplay(){
     gameIsOver = true;
-    // gameOver();
-    // cancelAnimationFrame(animationFrame);
-    // restartScene();
 }
 window.exitGameplay = exitGameplay;
 
@@ -714,13 +682,6 @@ function startSpawn(){
     msg.text = "Game start!";
     msg.volume = window.userData.speechVolume;
     window.speechSynthesis.speak(msg);
-
-    // groundCylinder.rotation.x = 4;
-    // var collectable = addCollectable();
-    // spawnOnGround(collectable, 1, worldSize+0.2);
-    // collectable.rotation.x = 0; // to make ring turned
-    // collectable.rotation.y = groundCylinder.rotation.x; //offset ground rotation
-    // collectablePool.push(collectable);
 
     gamePlaying = true;
     collisionDistance = speed/2;

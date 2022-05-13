@@ -17,12 +17,3 @@ export function DarkenColor(color, lightness) {
         (Math.max(0, Math.min(((color & 0x0000FF)) - lightness, 0xFF)));
   
 };
-
-// switch (lane){
-        //     case 1:
-        //         return 1;
-        //     case 2:
-        //         return 0;
-        //     case 3:
-        //         return -1;
-        // } 
