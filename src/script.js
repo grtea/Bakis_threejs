@@ -1,13 +1,12 @@
 import './style.css';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { laneToPos, DarkenColor } from './Helpers/logichelpers.js';
 import { spawnPosition } from './Helpers/angleCalculator.js';
 import './Helpers/settings';
-import { EqualStencilFunc, Points, Vector3 } from 'three';
+import { Vector3 } from 'three';
 import { MathUtils } from 'three';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
