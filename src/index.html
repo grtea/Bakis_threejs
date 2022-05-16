@@ -83,7 +83,7 @@
                                                         class="form-control"
                                                         id="buttonRightInput" 
                                                         placeholder="Button Right" 
-                                                        aria-label="Button Right" 
+                                                        aria-label="Map Button Right" 
                                                         aria-describedby="mapBtnRight"
                                                         disabled>
                                                     <div class="input-group-append">
@@ -91,7 +91,7 @@
                                                             class="btn btn-outline-secondary" 
                                                             type="button" 
                                                             id="buttonRightRecord"
-                                                            aria-label="Edit"
+                                                            aria-label="Edit Button Right"
                                                             aria-describedby="buttonRightInput">
                                                             <i class="fa-solid fa-pen settingsIcon"></i>
                                                         </button>
@@ -108,7 +108,7 @@
                                                         class="form-control" 
                                                         id="buttonLeftInput" 
                                                         placeholder="Button Left" 
-                                                        aria-label="Button Left" 
+                                                        aria-label="Map button Left" 
                                                         aria-describedby="mapBtnLeft"
                                                         disabled>
                                                     <div class="input-group-append">
@@ -116,7 +116,7 @@
                                                             class="btn btn-outline-secondary" 
                                                             type="button" 
                                                             id="buttonLeftRecord"
-                                                            aria-label="Edit"
+                                                            aria-label="Edit Button Left"
                                                             aria-describedby="buttonLeftInput">
                                                             <i class="fa-solid fa-pen settingsIcon"></i></i>
                                                         </button>
@@ -162,7 +162,7 @@
                                                             <button 
                                                             type="button" 
                                                             class="form-control col-sm-3 btn font-size-btn" 
-                                                            aria-label="increase"
+                                                            aria-label="Increase text size"
                                                             aria-describedby="textSize"
                                                             onclick="increaseTextSize()"
                                                             ><i class="fa-solid fa-plus settingsIcon"></i></button>
@@ -171,7 +171,7 @@
                                                             <button 
                                                             type="button" 
                                                             class="form-control col-sm-3 btn font-size-btn btn-negative-click"
-                                                            aria-label="decrease"
+                                                            aria-label="Decrease text size"
                                                             aria-describedby="textSize"
                                                             onclick="decreaseTextSize()"
                                                             ><i class="fa-solid fa-minus settingsIcon"></i></button>
@@ -187,7 +187,8 @@
                                                 type="color" 
                                                 class="form-control color-picker mx-auto" 
                                                 id="textColorInput" 
-                                                aria-describedby="textColor" 
+                                                aria-describedby="textColor"
+                                                aria-label="Text Color" 
                                                 value="#212529">
                                             </div>
                                         </div>
@@ -199,6 +200,7 @@
                                                 class="form-control color-picker mx-auto" 
                                                 id="UIColorInput" 
                                                 aria-describedby="backgroundColor" 
+                                                aria-label="Background Color" 
                                                 value="#ffffff">
                                             </div>
                                         </div>
@@ -303,8 +305,18 @@
             <!-- GAME OVER END -->
             <!--ON SCREEN CONTROLS START-->
             <div class="onScreenControls show" style="display: none">
-                <button class="btn btn-primary btn-md" onclick="keyDownHandler({keyCode: window.userData.leftKey})" aria-label="Go Left"><i class="fa-solid fa-arrow-left-long"></i></button>
-                <button class="btn btn-primary btn-md" onclick="keyDownHandler({keyCode: window.userData.rightKey})" aria-label="Go Right"><i class="fa-solid fa-arrow-right-long"></i></button>
+                <button 
+                    class="btn btn-primary btn-lg" 
+                    onclick="keyDownHandler({keyCode: window.userData.leftKey})" 
+                    aria-label="Go Left">
+                    <i class="fa-solid fa-arrow-left-long"></i>
+                </button>
+                <button 
+                    class="btn btn-primary btn-lg" 
+                    onclick="keyDownHandler({keyCode: window.userData.rightKey})" 
+                    aria-label="Go Right">
+                    <i class="fa-solid fa-arrow-right-long"></i>
+                </button>
             </div>
             <!--ON SCREEN CONTROLS END-->
         </div>
